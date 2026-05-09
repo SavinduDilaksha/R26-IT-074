@@ -1,0 +1,80 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: #082f49;
+    color: #f0f9ff;
+    min-height: 100vh;
+  }
+  * { box-sizing: border-box; }
+}
+
+@layer components {
+  .glass {
+    background: rgba(14, 116, 144, 0.08);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(125, 211, 252, 0.15);
+  }
+  .glass-bright {
+    background: rgba(14, 116, 144, 0.18);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(125, 211, 252, 0.25);
+  }
+  .btn-primary {
+    @apply bg-ocean-500 hover:bg-ocean-400 text-white font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 active:scale-95 shadow-lg shadow-ocean-900/40;
+  }
+  .btn-ghost {
+    @apply bg-transparent hover:bg-ocean-800/50 text-ocean-200 font-medium px-4 py-2 rounded-xl transition-all duration-200 border border-ocean-700/50 hover:border-ocean-500/50;
+  }
+  .input-field {
+    @apply w-full bg-ocean-900/60 border border-ocean-700/50 text-ocean-100 rounded-xl px-4 py-2.5 text-sm font-body focus:outline-none focus:border-ocean-400 focus:ring-2 focus:ring-ocean-500/20 transition-all placeholder-ocean-500;
+  }
+  .select-field {
+    @apply w-full bg-ocean-900/60 border border-ocean-700/50 text-ocean-100 rounded-xl px-4 py-2.5 text-sm font-body focus:outline-none focus:border-ocean-400 transition-all cursor-pointer;
+  }
+  .card {
+    @apply glass rounded-2xl p-5;
+  }
+  .card-bright {
+    @apply glass-bright rounded-2xl p-5;
+  }
+  .badge-fed {
+    @apply text-xs font-mono px-2.5 py-1 rounded-full bg-teal-500/20 text-teal-400 border border-teal-500/30;
+  }
+  .badge-hungry {
+    @apply text-xs font-mono px-2.5 py-1 rounded-full bg-coral-500/20 text-coral-400 border border-coral-500/30;
+  }
+  .badge-type {
+    @apply text-xs font-mono px-2.5 py-1 rounded-full bg-ocean-700/60 text-ocean-300 border border-ocean-600/40;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    background: linear-gradient(135deg, #7dd3fc, #2dd4bf);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+}
+
+/* Bubble animation */
+.bubble {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, rgba(125, 211, 252, 0.3), rgba(14, 165, 233, 0.05));
+  border: 1px solid rgba(125, 211, 252, 0.2);
+  animation: rise linear infinite;
+  pointer-events: none;
+}
+@keyframes rise {
+  0%   { transform: translateY(0) scale(1); opacity: 0.6; }
+  100% { transform: translateY(-110vh) scale(0.5); opacity: 0; }
+}
