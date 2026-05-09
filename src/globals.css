@@ -1,0 +1,113 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 48%;
+
+    --radius: 0.75rem;
+
+    --chart-1: 199 89% 48%; /* Cyan */
+    --chart-2: 258 90% 66%; /* Purple */
+    --chart-3: 316 73% 52%; /* Pink */
+    --chart-4: 160 84% 39%; /* Neon Green */
+    --chart-5: 43 96% 56%;  /* Yellow */
+  }
+
+  .dark {
+    --background: 230 25% 6%;
+    --foreground: 210 40% 98%;
+
+    --card: 230 25% 10%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 230 25% 8%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 100% 60%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 260 60% 20%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 230 25% 15%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 280 100% 60%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 230 25% 18%;
+    --input: 230 25% 18%;
+    --ring: 210 100% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans;
+    background-image: 
+      radial-gradient(circle at 15% 50%, rgba(20, 40, 100, 0.15) 0%, transparent 50%),
+      radial-gradient(circle at 85% 30%, rgba(80, 20, 120, 0.15) 0%, transparent 50%);
+    background-attachment: fixed;
+  }
+}
+
+.glass-panel {
+  @apply bg-card/60 backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.36)];
+}
+
+.text-gradient {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600;
+}
+
+/* Custom Scrollbar for dark theme */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground));
+}
