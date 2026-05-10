@@ -19,7 +19,7 @@ export default function SensorAnalyticsTab() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {sensorConfigs.map((cfg) => {
           const data = sensorHistory[cfg.key];
-          const current = sensorData[cfg.key] || sensorData.dissolvedO2;
+          const current = sensorData[cfg.key] || { value: 0, status: 'normal' };
           const Icon = cfg.icon;
 
           return (
@@ -110,7 +110,6 @@ export default function SensorAnalyticsTab() {
                   <th className="text-left px-5 py-3 font-medium">Sensor</th>
                   <th className="text-left px-5 py-3 font-medium">Status</th>
                   <th className="text-left px-5 py-3 font-medium">Last Reading</th>
-                  <th className="text-left px-5 py-3 font-medium">Battery</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/30">
@@ -123,14 +122,6 @@ export default function SensorAnalyticsTab() {
                       </span>
                     </td>
                     <td className="px-5 py-3 text-slate-400 text-xs">{sensor.lastReading}</td>
-                    <td className="px-5 py-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-16 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                          <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${sensor.battery}%` }} />
-                        </div>
-                        <span className="text-xs text-slate-400">{sensor.battery}%</span>
-                      </div>
-                    </td>
                   </tr>
                 ))}
               </tbody>

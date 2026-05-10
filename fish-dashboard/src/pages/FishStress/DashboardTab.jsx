@@ -8,7 +8,7 @@ import { stressChartData, alertLogs } from '../../data/mockData';
 
 // Base sensor values
 const BASE = {
-  ph: 7.2, temperature: 28.4, ammonia: 0.05, dissolvedO2: 3.5, turbidity: 12,
+  ph: 7.2, temperature: 28.4, ammonia: 0.05, turbidity: 12,
 };
 
 // Sensor safe ranges for Molly fish
@@ -16,7 +16,7 @@ const RANGES = {
   ph:          { min: 7.0, max: 8.5, unit: '',      label: 'pH Level',       icon: Droplet,      dangerBelow: true },
   temperature: { min: 24,  max: 28,  unit: '°C',    label: 'Temperature',    icon: Thermometer,  dangerBelow: false },
   ammonia:     { min: 0,   max: 0.02,unit: 'mg/L',  label: 'Ammonia (NH₃)', icon: Wind,         dangerAbove: true },
-  dissolvedO2: { min: 5,   max: 8,   unit: 'mg/L',  label: 'Dissolved O₂',  icon: Activity,     dangerBelow: true },
+  turbidity:   { min: 0,   max: 20,  unit: 'NTU',   label: 'Turbidity',     icon: Droplet,      dangerAbove: true },
 };
 
 const ACTIONS = {
@@ -41,7 +41,7 @@ const ACTIONS = {
 
 function getStatus(key, val) {
   if (key === 'ammonia') return val > 0.02 ? (val > 0.05 ? 'critical' : 'warning') : 'normal';
-  if (key === 'dissolvedO2') return val < 4 ? 'critical' : val < 5 ? 'warning' : 'normal';
+  if (key === 'turbidity') return val > 25 ? 'critical' : val > 20 ? 'warning' : 'normal';
   if (key === 'ph') return (val < 6.8 || val > 8.5) ? 'warning' : 'normal';
   if (key === 'temperature') return (val > 29 || val < 23) ? 'warning' : 'normal';
   return 'normal';
@@ -125,7 +125,6 @@ export default function DashboardTab() {
         ph: +(prev.ph + (Math.random() - 0.5) * 0.05).toFixed(2),
         temperature: +(prev.temperature + (Math.random() - 0.5) * 0.2).toFixed(1),
         ammonia: +(Math.max(0, prev.ammonia + (Math.random() - 0.45) * 0.005)).toFixed(3),
-        dissolvedO2: +(Math.max(0, prev.dissolvedO2 + (Math.random() - 0.5) * 0.15)).toFixed(1),
         turbidity: +(Math.max(0, prev.turbidity + (Math.random() - 0.5) * 0.5)).toFixed(1),
       }));
       setLastUpdated(0);
@@ -137,9 +136,9 @@ export default function DashboardTab() {
   }, []);
 
   // Derived state
-  const overallStatus = sensors.dissolvedO2 < 4 ? 'critical' : sensors.ammonia > 0.04 ? 'warning' : 'normal';
+  const overallStatus = sensors.turbidity > 25 ? 'critical' : sensors.ammonia > 0.04 ? 'warning' : 'normal';
   const healthScore = Math.round(
-    100 - (sensors.ammonia > 0.02 ? 30 : 0) - (sensors.dissolvedO2 < 5 ? 35 : 0) -
+    100 - (sensors.ammonia > 0.02 ? 30 : 0) - (sensors.turbidity > 25 ? 35 : 0) -
     (sensors.temperature > 29 ? 10 : 0) - (sensors.ph < 6.8 ? 15 : 0)
   );
   const actions = ACTIONS[overallStatus];

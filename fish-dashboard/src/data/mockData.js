@@ -20,7 +20,6 @@ export const sensorData = {
   temperature: { value: 28.4, status: 'normal', unit: '°C', min: 24, max: 28, label: 'Temperature' },
   ammonia: { value: 0.05, status: 'warning', unit: 'mg/L', min: 0, max: 0.02, label: 'Ammonia (NH3)' },
   turbidity: { value: 12, status: 'normal', unit: 'NTU', min: 0, max: 25, label: 'Turbidity' },
-  dissolvedO2: { value: 3.5, status: 'critical', unit: 'mg/L', min: 5, max: 8, label: 'Dissolved O2' },
 };
 
 // ===== 7-Day Sensor History =====
@@ -131,10 +130,10 @@ export const systemInfo = {
   camera1: { name: 'Top Camera (Pi Cam)', status: 'online', resolution: '1080p', fps: 30 },
   camera2: { name: 'Front Camera (Pi Cam)', status: 'online', resolution: '1080p', fps: 30 },
   sensors: [
-    { name: 'pH Sensor', status: 'online', lastReading: '2 sec ago', battery: 85 },
-    { name: 'Temperature Sensor', status: 'online', lastReading: '1 sec ago', battery: 92 },
-    { name: 'NPK Sensor (NH3)', status: 'online', lastReading: '3 sec ago', battery: 78 },
-    { name: 'Turbidity Sensor', status: 'online', lastReading: '2 sec ago', battery: 88 },
+    { name: 'pH Sensor', status: 'online', lastReading: '2 sec ago' },
+    { name: 'Temperature Sensor', status: 'online', lastReading: '1 sec ago' },
+    { name: 'NPK Sensor (NH3)', status: 'online', lastReading: '3 sec ago' },
+    { name: 'Turbidity Sensor', status: 'online', lastReading: '2 sec ago' },
   ],
 };
 
