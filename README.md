@@ -1,4 +1,3 @@
-# R26-IT-074
 # AquaVision: ML/DL and IoT Driven Smart Aquarium System
 
 Repository Link : https://github.com/SavinduDilaksha/R26-IT-074.git
