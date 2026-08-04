@@ -205,36 +205,7 @@ export default function LiveMonitoringTab() {
             </div>
           </div>
 
-          {/* Live Sensor Readings */}
-          <div className="bg-slate-900/40 backdrop-blur-md border border-slate-800/80 rounded-2xl p-5">
-            <h3 className="text-sm font-semibold text-slate-200 mb-4 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              Live Sensor Readings
-            </h3>
-            <div className="space-y-3">
-              {Object.entries(sensors).map(([key, val]) => {
-                const cfg = SENSOR_LABELS[key];
-                const Icon = cfg.icon;
-                const st = getStatus(key, val);
-                return (
-                  <div key={key} className="flex items-center justify-between py-1.5 border-b border-slate-800/40 last:border-0">
-                    <span className="flex items-center gap-2 text-xs text-slate-400">
-                      <Icon className={`w-3.5 h-3.5 ${cfg.color}`} />
-                      {cfg.label}
-                    </span>
-                    <div className="text-right">
-                      <span className={`text-sm font-bold ${STATUS_COLOR[st]}`}>
-                        {val < 1 ? val.toFixed(3) : val} <span className="text-[10px] font-normal text-slate-500">{cfg.unit}</span>
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            <p className="text-[10px] text-slate-600 mt-3 flex items-center gap-1">
-              <Clock className="w-3 h-3" /> Refreshes every 3 seconds
-            </p>
-          </div>
+          
         </div>
       </div>
     </div>
