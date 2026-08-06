@@ -6,7 +6,74 @@ import {
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { stressChartData, alertLogs } from '../../data/mockData';
 
+// Base sensor values
+const BASE = {
+  ph: 7.2, temperature: 28.4, ammonia: 0.05, turbidity: 12,
+};
 
+// Sensor safe ranges for Molly fish
+const RANGES = {
+  ph:          { min: 7.0, max: 8.5, unit: '',      label: 'pH Level',       icon: Droplet,      dangerBelow: true },
+  temperature: { min: 24,  max: 28,  unit: '°C',    label: 'Temperature',    icon: Thermometer,  dangerBelow: false },
+  ammonia:     { min: 0,   max: 0.02,unit: 'mg/L',  label: 'Ammonia (NH₃)', icon: Wind,         dangerAbove: true },
+  turbidity:   { min: 0,   max: 20,  unit: 'NTU',   label: 'Turbidity',     icon: Droplet,      dangerAbove: true },
+};
+
+const ACTIONS = {
+  critical: [
+    { icon: '🚨', step: 'Immediately check your oxygen pump — turn it up or replace.', urgent: true },
+    { icon: '💧', step: 'Do a 25–30% water change right now using dechlorinated water.', urgent: true },
+    { icon: '🌡️', step: 'Make sure heater is working. Target 26–28°C.', urgent: false },
+    { icon: '📞', step: 'Watch fish closely for next 30 minutes for improvement.', urgent: false },
+  ],
+  warning: [
+    { icon: '⚠️', step: 'Ammonia rising — reduce feeding for 2 days.', urgent: false },
+    { icon: '💧', step: 'Plan a 20% water change within today.', urgent: false },
+    { icon: '🔍', step: 'Check filter — clean if due.', urgent: false },
+    { icon: '📊', step: 'Monitor sensors every hour until levels normalize.', urgent: false },
+  ],
+  normal: [
+    { icon: '✅', step: 'All looks good! Fish are healthy and calm.', urgent: false },
+    { icon: '🗓️', step: 'Next scheduled water check: Tomorrow 9:00 AM', urgent: false },
+    { icon: '🐠', step: 'Feed as scheduled. Avoid overfeeding.', urgent: false },
+  ],
+};
+
+function getStatus(key, val) {
+  if (key === 'ammonia') return val > 0.02 ? (val > 0.05 ? 'critical' : 'warning') : 'normal';
+  if (key === 'turbidity') return val > 25 ? 'critical' : val > 20 ? 'warning' : 'normal';
+  if (key === 'ph') return (val < 6.8 || val > 8.5) ? 'warning' : 'normal';
+  if (key === 'temperature') return (val > 29 || val < 23) ? 'warning' : 'normal';
+  return 'normal';
+}
+
+function getSafePercent(key, val) {
+  const r = RANGES[key];
+  if (!r) return 50;
+  const range = r.max - r.min;
+  const clamped = Math.max(0, Math.min(r.max * 1.5, val));
+  return Math.round(((clamped - 0) / (r.max * 1.5)) * 100);
+}
+
+function getBarColor(key, val) {
+  const s = getStatus(key, val);
+  if (s === 'critical') return '#ef4444';
+  if (s === 'warning') return '#f59e0b';
+  return '#22c55e';
+}
+
+const statusColors = { normal: 'text-emerald-400', warning: 'text-amber-400', critical: 'text-red-400' };
+const statusBg = { normal: 'bg-emerald-400/10 border-emerald-500/20', warning: 'bg-amber-400/10 border-amber-500/20', critical: 'bg-red-500/10 border-red-500/20 animate-pulse' };
+const cardBorder = { normal: 'border-slate-800/80', warning: 'border-amber-900/30', critical: 'border-red-900/50' };
+
+function SensorCard({ sensorKey, value, lastUpdated }) {
+  const cfg = RANGES[sensorKey];
+  const Icon = cfg.icon;
+  const status = getStatus(sensorKey, value);
+  const pct = getSafePercent(sensorKey, value);
+  const barColor = getBarColor(sensorKey, value);
+  const safeStart = Math.round((cfg.min / (cfg.max * 1.5)) * 100);
+  const safeEnd = Math.round((cfg.max / (cfg.max * 1.5)) * 100);
 
   return (
     <div className={`bg-slate-900/40 backdrop-blur-md border ${cardBorder[status]} rounded-2xl p-4 flex flex-col gap-3 hover:bg-slate-800/40 transition-colors group relative overflow-hidden`}>
