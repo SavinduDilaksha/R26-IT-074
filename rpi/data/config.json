@@ -1,0 +1,23 @@
+{
+  "cameras": {
+    "side_camera_index": 0,
+    "top_camera_index": 2
+  },
+  "sensor_config": {
+    "arduino_serial_port": "/dev/ttyUSB1",
+    "ionconcentration_serial_port": "/dev/ttyUSB0"
+  },
+  "vision": {
+    "fish_confidence": 0.2,
+    "max_tracked_fish": 4,
+    "top_region_percent": 0.3,
+    "bottom_region_percent": 0.25
+  },
+  "servo": {
+    "max_daily_feedings": 10,
+    "post_feed_cooldown_minutes": 30
+  },
+  "firebase": {
+    "firebase_database_url": "https://aqua-9e38e-default-rtdb.firebaseio.com"
+  }
+}
