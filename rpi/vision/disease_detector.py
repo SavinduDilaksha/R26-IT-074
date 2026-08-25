@@ -1,0 +1,190 @@
+import json
+from typing import Dict, Any, Optional
+import numpy as np
+from config import (
+    DISEASE_CLASSES_PATH,
+    DISEASE_MODEL_ONNX_PATH,
+)
+from utils.logger import get_logger
+
+LOG = get_logger(__name__)
+
+class DiseaseDetector:
+    """ONNX Runtime session manager for side-view fish disease classification."""
+
+    def __init__(self):
+        self.session = None
+        self.classes = None
+        self.input_name: str = ""
+        self.input_shape: tuple = (224, 224)  # (H, W) — updated on load
+        self._load_attempted: bool = False
+
+    def _load(self) -> bool:
+        """Lazy-load ONNX model and class label mappings."""
+        if self.session is not None:
+            return True
+        if self._load_attempted:
+            return False
+        self._load_attempted = True
+
+        if not DISEASE_MODEL_ONNX_PATH.exists():
+            LOG.warning("Disease ONNX model not found: %s", DISEASE_MODEL_ONNX_PATH)
+            return False
+        if not DISEASE_CLASSES_PATH.exists():
+            LOG.warning("Disease class_names.json not found: %s", DISEASE_CLASSES_PATH)
+            return False
+
+        try:
+            import onnxruntime as ort
+
+            self.classes = json.loads(DISEASE_CLASSES_PATH.read_text(encoding="utf-8"))
+
+            opts = ort.SessionOptions()
+            opts.intra_op_num_threads = 4
+            opts.inter_op_num_threads = 1
+            opts.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+
+            self.session = ort.InferenceSession(
+                str(DISEASE_MODEL_ONNX_PATH),
+                sess_options=opts,
+                providers=["CPUExecutionProvider"],
+            )
+
+            meta = self.session.get_inputs()[0]
+            self.input_name = meta.name
+            # shape: [batch, H, W, C] or [batch, C, H, W]
+            shape = meta.shape
+            if len(shape) == 4:
+                if shape[1] in (1, 3):   # NCHW
+                    self.input_shape = (int(shape[2]), int(shape[3]))
+                else:                     # NHWC
+                    self.input_shape = (int(shape[1]), int(shape[2]))
+            LOG.info(
+                "Disease ONNX model loaded: %s  input=%s  classes=%d",
+                DISEASE_MODEL_ONNX_PATH.name,
+                self.input_shape,
+                len(self.classes) if self.classes else 0,
+            )
+            return True
+
+        except Exception as exc:
+            LOG.error("Failed to initialise disease ONNX session: %s", exc)
+            return False
+
+
+    def detect(
+        self,
+        frame,
+        fish_id: Optional[int] = None,
+        tracks: Optional[list] = None,
+        use_roi: Optional[bool] = None,
+    ) -> Dict[str, Any]:
+        
+        if frame is None:
+            return {"fish_id": fish_id, "disease_class": "Healthy", "confidence": 1.0, "per_fish_diseases": []}
+
+        if tracks and (use_roi or use_roi is None):
+            return self.detect_from_tracks(frame, tracks)
+
+        if not self._load():
+            return {
+                "fish_id": fish_id,
+                "disease_class": "Healthy",
+                "confidence": 1.0,
+                "note": "ONNX model not available",
+                "per_fish_diseases": [],
+            }
+
+        try:
+            import cv2
+
+            h, w = self.input_shape
+            resized = cv2.resize(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), (w, h))
+
+            input_data = np.expand_dims(resized, axis=0).astype(np.float32)
+
+            
+            if hasattr(self, "input_shape") and len(self.session.get_inputs()[0].shape) == 4:
+                if self.session.get_inputs()[0].shape[1] in (1, 3):
+                    input_data = np.transpose(input_data, (0, 3, 1, 2))
+
+            outputs = self.session.run(None, {self.input_name: input_data})
+            probabilities = np.squeeze(outputs[0]).astype(np.float32)  
+
+            p_sum = float(np.sum(probabilities))
+            if p_sum < 0.95 or p_sum > 1.05 or np.any(probabilities < 0.0):
+                exp_p = np.exp(probabilities - np.max(probabilities))
+                probabilities = exp_p / np.sum(exp_p)
+
+            predicted_index = int(np.argmax(probabilities))
+            disease = self.classes[predicted_index] if self.classes else f"Class_{predicted_index}"
+            confidence = round(float(probabilities[predicted_index]), 4)
+
+            return {
+                "fish_id": fish_id,
+                "disease_class": disease,
+                "confidence": confidence,
+                "per_fish_diseases": [],
+            }
+
+        except Exception as exc:
+            LOG.error("Disease ONNX inference failed: %s", exc)
+            return {
+                "fish_id": fish_id,
+                "disease_class": "Unknown",
+                "confidence": 0.0,
+                "error": str(exc),
+                "per_fish_diseases": [],
+            }
+
+    def detect_from_tracks(self, frame, tracks: list) -> Dict[str, Any]:
+        if frame is None or not tracks:
+            return self.detect(frame)
+
+        h, w = frame.shape[:2]
+        per_fish_results = []
+
+        for fish in tracks:
+            bbox = fish.get("bbox")
+            fid = fish.get("fish_id")
+            if not bbox or len(bbox) < 4:
+                continue
+
+            x1 = max(0, int(bbox[0]))
+            y1 = max(0, int(bbox[1]))
+            x2 = min(w, int(bbox[2]))
+            y2 = min(h, int(bbox[3]))
+
+            if x2 > x1 and y2 > y1:
+                crop = frame[y1:y2, x1:x2]
+                res = self.detect(crop, fish_id=fid)
+                res["bbox"] = [x1, y1, x2, y2]
+                per_fish_results.append(res)
+
+        if not per_fish_results:
+            return self.detect(frame)
+
+        diseased = [r for r in per_fish_results if "healthy" not in r.get("disease_class", "").lower()]
+        primary = max(diseased or per_fish_results, key=lambda r: r.get("confidence", 0.0))
+
+        return {
+            "disease_class": primary.get("disease_class", "Healthy"),
+            "confidence": primary.get("confidence", 1.0),
+            "fish_id": primary.get("fish_id"),
+            "per_fish_diseases": per_fish_results,
+        }
+
+
+
+
+
+
+
+
+
+
+
+            
+
+
+
