@@ -161,6 +161,14 @@ class DiseaseDetector:
                 res["bbox"] = [x1, y1, x2, y2]
                 per_fish_results.append(res)
 
+        if not per_fish_results:
+            return self.detect(frame)
+
+        diseased = [r for r in per_fish_results if "healthy" not in r.get("disease_class", "").lower()]
+        primary = max(diseased or per_fish_results, key=lambda r: r.get("confidence", 0.0))
+
+
+
 
 
 
