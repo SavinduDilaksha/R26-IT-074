@@ -120,6 +120,15 @@ class DiseaseDetector:
             disease = self.classes[predicted_index] if self.classes else f"Class_{predicted_index}"
             confidence = round(float(probabilities[predicted_index]), 4)
 
+            return {
+                "fish_id": fish_id,
+                "disease_class": disease,
+                "confidence": confidence,
+                "per_fish_diseases": [],
+            }
+
+
+
 
 
 
