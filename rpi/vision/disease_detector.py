@@ -108,7 +108,9 @@ class DiseaseDetector:
                 if self.session.get_inputs()[0].shape[1] in (1, 3):
                     input_data = np.transpose(input_data, (0, 3, 1, 2))
 
-        
+            outputs = self.session.run(None, {self.input_name: input_data})
+            probabilities = np.squeeze(outputs[0]).astype(np.float32)  
+
 
             
 
