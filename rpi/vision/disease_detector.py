@@ -95,6 +95,13 @@ class DiseaseDetector:
                 "per_fish_diseases": [],
             }
 
+        try:
+            import cv2
+
+            h, w = self.input_shape
+            resized = cv2.resize(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), (w, h))
+        
+
             
 
 
