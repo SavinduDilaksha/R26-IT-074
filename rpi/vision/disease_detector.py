@@ -116,6 +116,11 @@ class DiseaseDetector:
                 exp_p = np.exp(probabilities - np.max(probabilities))
                 probabilities = exp_p / np.sum(exp_p)
 
+            predicted_index = int(np.argmax(probabilities))
+            disease = self.classes[predicted_index] if self.classes else f"Class_{predicted_index}"
+            confidence = round(float(probabilities[predicted_index]), 4)
+
+
 
 
             
