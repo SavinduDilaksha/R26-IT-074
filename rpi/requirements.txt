@@ -1,0 +1,36 @@
+# Smart Aquarium Monitoring System — Comprehensive Raspberry Pi 4B Dependencies
+
+# Core numerical, array & scientific processing
+numpy>=1.24.0
+pandas>=2.0.0
+scipy>=1.10.0
+
+# Computer vision & Image Processing (with GUI window support for live desktop preview)
+opencv-python>=4.8.0
+Pillow>=9.5.0
+
+# ONNX Runtime — high-performance CPU inference for YOLOv8 & disease classifier
+# (Works on both aarch64 / armv7l on Pi 4B and x86-64 development machines)
+onnxruntime>=1.16.0
+
+# Water quality ML & Model Persistence
+scikit-learn>=1.3.0
+joblib>=1.3.0
+
+# Explainability & Visualization
+shap>=0.42.0
+matplotlib>=3.7.0
+
+# IoT & Sensor Hardware Interfaces
+pyserial>=3.5
+pymodbus>=3.0.0
+rpi-lgpio>=0.6; platform_system == 'Linux'
+gpiozero>=2.0; platform_system == 'Linux'
+
+# Firebase Cloud Synchronization & REST
+firebase-admin>=6.2.0
+requests>=2.28.0
+
+# Web UI Dashboard & API Backend
+Flask>=3.0.0
+Flask-Cors>=4.0.0
