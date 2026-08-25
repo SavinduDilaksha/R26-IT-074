@@ -70,7 +70,31 @@ class DiseaseDetector:
         except Exception as exc:
             LOG.error("Failed to initialise disease ONNX session: %s", exc)
             return False
+
+
+    def detect(
+        self,
+        frame,
+        fish_id: Optional[int] = None,
+        tracks: Optional[list] = None,
+        use_roi: Optional[bool] = None,
+    ) -> Dict[str, Any]:
         
+        if frame is None:
+            return {"fish_id": fish_id, "disease_class": "Healthy", "confidence": 1.0, "per_fish_diseases": []}
+
+        if tracks and (use_roi or use_roi is None):
+            return self.detect_from_tracks(frame, tracks)
+
+        if not self._load():
+            return {
+                "fish_id": fish_id,
+                "disease_class": "Healthy",
+                "confidence": 1.0,
+                "note": "ONNX model not available",
+                "per_fish_diseases": [],
+            }
+
             
 
 
