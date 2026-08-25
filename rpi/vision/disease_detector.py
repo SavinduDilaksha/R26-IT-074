@@ -137,6 +137,26 @@ class DiseaseDetector:
                 "per_fish_diseases": [],
             }
 
+    def detect_from_tracks(self, frame, tracks: list) -> Dict[str, Any]:
+        if frame is None or not tracks:
+            return self.detect(frame)
+
+        h, w = frame.shape[:2]
+        per_fish_results = []
+
+        for fish in tracks:
+            bbox = fish.get("bbox")
+            fid = fish.get("fish_id")
+            if not bbox or len(bbox) < 4:
+                continue
+
+            x1 = max(0, int(bbox[0]))
+            y1 = max(0, int(bbox[1]))
+            x2 = min(w, int(bbox[2]))
+            y2 = min(h, int(bbox[3]))
+
+
+
 
 
 
