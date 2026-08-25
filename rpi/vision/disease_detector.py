@@ -50,5 +50,16 @@ class DiseaseDetector:
                 providers=["CPUExecutionProvider"],
             )
 
+            meta = self.session.get_inputs()[0]
+            self.input_name = meta.name
+            # shape: [batch, H, W, C] or [batch, C, H, W]
+            shape = meta.shape
+            if len(shape) == 4:
+                if shape[1] in (1, 3):   # NCHW
+                    self.input_shape = (int(shape[2]), int(shape[3]))
+                else:                     # NHWC
+                    self.input_shape = (int(shape[1]), int(shape[2]))
+            
+
 
 
