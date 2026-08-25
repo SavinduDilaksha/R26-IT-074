@@ -59,6 +59,18 @@ class DiseaseDetector:
                     self.input_shape = (int(shape[2]), int(shape[3]))
                 else:                     # NHWC
                     self.input_shape = (int(shape[1]), int(shape[2]))
+            LOG.info(
+                "Disease ONNX model loaded: %s  input=%s  classes=%d",
+                DISEASE_MODEL_ONNX_PATH.name,
+                self.input_shape,
+                len(self.classes) if self.classes else 0,
+            )
+            return True
+
+        except Exception as exc:
+            LOG.error("Failed to initialise disease ONNX session: %s", exc)
+            return False
+        
             
 
 
