@@ -155,6 +155,13 @@ class DiseaseDetector:
             x2 = min(w, int(bbox[2]))
             y2 = min(h, int(bbox[3]))
 
+            if x2 > x1 and y2 > y1:
+                crop = frame[y1:y2, x1:x2]
+                res = self.detect(crop, fish_id=fid)
+                res["bbox"] = [x1, y1, x2, y2]
+                per_fish_results.append(res)
+
+
 
 
 
