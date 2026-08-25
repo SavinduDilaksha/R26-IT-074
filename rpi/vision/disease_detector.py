@@ -167,6 +167,13 @@ class DiseaseDetector:
         diseased = [r for r in per_fish_results if "healthy" not in r.get("disease_class", "").lower()]
         primary = max(diseased or per_fish_results, key=lambda r: r.get("confidence", 0.0))
 
+        return {
+            "disease_class": primary.get("disease_class", "Healthy"),
+            "confidence": primary.get("confidence", 1.0),
+            "fish_id": primary.get("fish_id"),
+            "per_fish_diseases": per_fish_results,
+        }
+
 
 
 
