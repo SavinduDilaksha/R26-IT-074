@@ -127,6 +127,16 @@ class DiseaseDetector:
                 "per_fish_diseases": [],
             }
 
+        except Exception as exc:
+            LOG.error("Disease ONNX inference failed: %s", exc)
+            return {
+                "fish_id": fish_id,
+                "disease_class": "Unknown",
+                "confidence": 0.0,
+                "error": str(exc),
+                "per_fish_diseases": [],
+            }
+
 
 
 
