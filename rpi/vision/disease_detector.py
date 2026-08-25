@@ -18,3 +18,19 @@ class DiseaseDetector:
         self.input_name: str = ""
         self.input_shape: tuple = (224, 224)  # (H, W) — updated on load
         self._load_attempted: bool = False
+
+    def _load(self) -> bool:
+        """Lazy-load ONNX model and class label mappings."""
+        if self.session is not None:
+            return True
+        if self._load_attempted:
+            return False
+        self._load_attempted = True
+
+        if not DISEASE_MODEL_ONNX_PATH.exists():
+            LOG.warning("Disease ONNX model not found: %s", DISEASE_MODEL_ONNX_PATH)
+            return False
+        if not DISEASE_CLASSES_PATH.exists():
+            LOG.warning("Disease class_names.json not found: %s", DISEASE_CLASSES_PATH)
+            return False
+
