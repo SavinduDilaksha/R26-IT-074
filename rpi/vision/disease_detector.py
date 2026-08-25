@@ -34,3 +34,9 @@ class DiseaseDetector:
             LOG.warning("Disease class_names.json not found: %s", DISEASE_CLASSES_PATH)
             return False
 
+        try:
+            import onnxruntime as ort
+
+            self.classes = json.loads(DISEASE_CLASSES_PATH.read_text(encoding="utf-8"))
+
+
