@@ -100,6 +100,14 @@ class DiseaseDetector:
 
             h, w = self.input_shape
             resized = cv2.resize(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), (w, h))
+
+            input_data = np.expand_dims(resized, axis=0).astype(np.float32)
+
+            
+            if hasattr(self, "input_shape") and len(self.session.get_inputs()[0].shape) == 4:
+                if self.session.get_inputs()[0].shape[1] in (1, 3):
+                    input_data = np.transpose(input_data, (0, 3, 1, 2))
+
         
 
             
