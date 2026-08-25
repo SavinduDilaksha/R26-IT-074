@@ -39,4 +39,16 @@ class DiseaseDetector:
 
             self.classes = json.loads(DISEASE_CLASSES_PATH.read_text(encoding="utf-8"))
 
+            opts = ort.SessionOptions()
+            opts.intra_op_num_threads = 4
+            opts.inter_op_num_threads = 1
+            opts.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+
+            self.session = ort.InferenceSession(
+                str(DISEASE_MODEL_ONNX_PATH),
+                sess_options=opts,
+                providers=["CPUExecutionProvider"],
+            )
+
+
 
