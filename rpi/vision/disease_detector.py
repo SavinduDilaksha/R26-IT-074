@@ -111,6 +111,12 @@ class DiseaseDetector:
             outputs = self.session.run(None, {self.input_name: input_data})
             probabilities = np.squeeze(outputs[0]).astype(np.float32)  
 
+            p_sum = float(np.sum(probabilities))
+            if p_sum < 0.95 or p_sum > 1.05 or np.any(probabilities < 0.0):
+                exp_p = np.exp(probabilities - np.max(probabilities))
+                probabilities = exp_p / np.sum(exp_p)
+
+
 
             
 
