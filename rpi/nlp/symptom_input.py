@@ -68,6 +68,15 @@ def _try_ml_model_prediction(text: str, official_classes: List[str]) -> Dict[str
         LOG.debug("ML model prediction skipped: %s", exc)
     return ml_probs
 
+def process(text: str) -> Dict[str, Any]:
+
+    if not text:
+        return {"input_text": "", "probabilities": {}, "detected_symptoms": [], "top_disease": "Healthy Fish"}
+
+    lowered = text.lower().strip()
+
+    
+
 
 
 
