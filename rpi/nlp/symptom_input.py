@@ -85,6 +85,14 @@ def process(text: str) -> Dict[str, Any]:
 
         matched = [kw for kw in keywords if kw in lowered]
 
+        if matched:
+            detected_symptoms.extend(matched)
+            score = round(min(0.60 + (0.20 * len(matched)), 0.95), 2)
+            probabilities[disease_cls] = score
+
+
+
+
 
 
 
