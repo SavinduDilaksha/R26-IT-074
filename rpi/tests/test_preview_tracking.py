@@ -101,7 +101,7 @@ def main():
             vis = frame.copy()
 
             
-            # Track the detected fish and get their current positions
+          
             tracks = tracker.track(frame)
 
           
@@ -168,7 +168,7 @@ def main():
 
            
             try:
-                # Show the processed frame with fish tracking information
+             
                 cv2.imshow(window_name, vis)
                 key = cv2.waitKey(1) & 0xFF
                 if key in (ord('q'), ord('Q'), 27):  # 'q' or ESC
