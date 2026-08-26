@@ -13,11 +13,11 @@ from utils.logger import get_logger
 
 LOG = get_logger(__name__)
 
-#add port number
+
 
 
 class IonConcentrationReader:
-    """Modbus serial client reader for water ion concentration sensor."""
+    
 
  
     BAUDRATE: int = 9600
