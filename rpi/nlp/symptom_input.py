@@ -90,6 +90,12 @@ def process(text: str) -> Dict[str, Any]:
             score = round(min(0.60 + (0.20 * len(matched)), 0.95), 2)
             probabilities[disease_cls] = score
 
+    total_matched = sum(probabilities.values())
+    if total_matched == 0:
+        for disease_cls in official_classes:
+            tokens = [t.lower() for t in disease_cls.split()]
+            matched_tokens = [t for t in tokens if t in lowered]
+        
 
 
 
