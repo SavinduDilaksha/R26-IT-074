@@ -17,7 +17,7 @@ LOG = get_logger(__name__)
 
 
 class IonConcentrationReader:
-    
+    """Modbus serial client reader for water ion concentration sensor."""
 
  
     BAUDRATE: int = 9600
