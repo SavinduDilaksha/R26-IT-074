@@ -35,6 +35,4 @@ def load_disease_classes() -> List[str]:
         try:
             classes = json.loads(DISEASE_CLASSES_PATH.read_text(encoding="utf-8"))
             return classes
-        except Exception as exc:
-            LOG.warning("Failed to load class_names.json: %s", exc)
-    return list(SYMPTOM_KNOWLEDGE_BASE.keys())
+        
