@@ -38,3 +38,24 @@ def load_disease_classes() -> List[str]:
         except Exception as exc:
             LOG.warning("Failed to load class_names.json: %s", exc)
     return list(SYMPTOM_KNOWLEDGE_BASE.keys())
+
+
+def _try_ml_model_prediction(text: str, official_classes: List[str]) -> Dict[str, float]:
+
+    ml_probs = {cls: 0.0 for cls in official_classes}
+
+    try:
+        from pathlib import Path
+        import joblib
+        from config import MODELS_DIR
+
+        model_path = MODELS_DIR / "NLP" / "fish_disease_nlp_model.pkl"
+        if not model_path.exists():
+            return ml_probs
+
+        bundle = joblib.load(str(model_path))
+        model = bundle.get("model")
+        disease_labels = bundle.get("disease_labels", {})
+
+
+
