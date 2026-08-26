@@ -74,6 +74,10 @@ def process(text: str) -> Dict[str, Any]:
         return {"input_text": "", "probabilities": {}, "detected_symptoms": [], "top_disease": "Healthy Fish"}
 
     lowered = text.lower().strip()
+    official_classes = load_disease_classes()
+    probabilities = {cls: 0.0 for cls in official_classes}
+    detected_symptoms = []
+
 
     
 
