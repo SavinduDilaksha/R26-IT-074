@@ -1,6 +1,3 @@
-
-
-
 import sys
 import os
 import time
@@ -55,7 +52,7 @@ def open_camera(index: int, width: int, height: int) -> cv2.VideoCapture:
 def main():
     args = parse_args()
 
-  
+    # Get the command line arguments needed to start the camera
     if os.name != "nt" and not os.environ.get("DISPLAY") and not os.environ.get("WAYLAND_DISPLAY"):
         os.environ["DISPLAY"] = ":0"
 
@@ -65,6 +62,7 @@ def main():
 
    
     print(f"[INFO] Loading YOLOv8 ONNX Fish Detector (Confidence: {args.conf})...")
+    # Create the fish tracker object to detect and track fish
     tracker = FishTracker()
 
    
@@ -89,6 +87,8 @@ def main():
     try:
         while True:
             t0 = time.time()
+
+            # Read a new frame from the connected camera
             ok, frame = cap.read()
             if not ok or frame is None:
                 print("[WARN] Failed to read frame from camera.")
@@ -96,10 +96,12 @@ def main():
                 continue
 
             frame_count += 1
+            # Get the height and width of the current camera frame
             fh, fw = frame.shape[:2]
             vis = frame.copy()
 
             
+            # Track the detected fish and get their current positions
             tracks = tracker.track(frame)
 
           
@@ -166,6 +168,7 @@ def main():
 
            
             try:
+                # Show the processed frame with fish tracking information
                 cv2.imshow(window_name, vis)
                 key = cv2.waitKey(1) & 0xFF
                 if key in (ord('q'), ord('Q'), 27):  # 'q' or ESC
