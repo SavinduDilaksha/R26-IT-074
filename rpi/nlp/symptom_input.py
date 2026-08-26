@@ -118,6 +118,15 @@ def process(text: str) -> Dict[str, Any]:
         top_disease = "Healthy Fish"
         probabilities["Healthy Fish"] = 1.0
 
+    return {
+        "input_text": text,
+        "probabilities": probabilities,
+        "detected_symptoms": list(set(detected_symptoms)),
+        "top_disease": top_disease,
+        "official_classes": official_classes,
+    }
+
+
 
 
         
