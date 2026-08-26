@@ -49,11 +49,7 @@ class IonConcentrationReader:
         )
 
     def read(self) -> Dict[str, Any]:
-        """Read ion concentration holding register from Modbus device on configured port.
-
-        Returns standard format:
-        {"value": float | None, "unit": "us/cm", "timestamp": str, "source": "modbus_rtu"}
-        """
+        
         timestamp = datetime.now(timezone.utc).isoformat()
         import os
         from pathlib import Path
