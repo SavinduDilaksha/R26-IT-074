@@ -99,6 +99,19 @@ def process(text: str) -> Dict[str, Any]:
                 probabilities[disease_cls] = 0.50
                 detected_symptoms.extend(matched_tokens)
 
+    ml_probs = _try_ml_model_prediction(text, official_classes)
+    if any(p > 0 for p in ml_probs.values()):
+        # Blended score: 60% ML Model + 40% Keyword Matcher (or pure ML if keywords empty)
+        for cls_name in official_classes:
+            kw_p = probabilities[cls_name]
+            ml_p = ml_probs[cls_name]
+            if kw_p > 0:
+                blended = round(0.60 * ml_p + 0.40 * kw_p, 3)
+            else:
+                blended = round(ml_p, 3)
+            probabilities[cls_name] = blended
+
+
         
 
 
