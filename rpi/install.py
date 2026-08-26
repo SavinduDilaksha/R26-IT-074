@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+
 """Installation & Setup Script for Smart Aquarium Monitoring System on Raspberry Pi 4B / Linux.
 
 Automates:
@@ -17,14 +17,13 @@ import argparse
 import shutil
 from pathlib import Path
 
-# Base Paths
+
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data"
 LOG_DIR = BASE_DIR / "logs"
 MODELS_DIR = BASE_DIR / "models"
 REQUIREMENTS_FILE = BASE_DIR / "requirements.txt"
 
-# ANSI Color codes for clean output
 COLOR_GREEN = "\033[92m"
 COLOR_YELLOW = "\033[93m"
 COLOR_RED = "\033[91m"
@@ -103,13 +102,13 @@ def create_directories_and_set_permissions():
     for directory in dirs:
         try:
             directory.mkdir(parents=True, exist_ok=True)
-            # Set directory permissions to rwxrwxr-x (775)
+            
             os.chmod(str(directory), 0o775)
             log_success(f"Directory ready with write permissions: {directory.relative_to(BASE_DIR)}")
         except Exception as exc:
             log_error(f"Failed to create/set permissions on {directory}: {exc}")
 
-    # Fix ownership recursively for the workspace if running under sudo on Linux
+   
     if platform.system() == "Linux" and os.geteuid() == 0 and actual_user != "root":
         try:
             log_info(f"Fixing folder ownership for user: {actual_user}...")
@@ -163,7 +162,7 @@ def install_apt_packages(dry_run: bool = False):
         "python3-rpi-lgpio",
         "libgl1",
         "libglib2.0-0",
-        # Wayland & Desktop Font packages
+        
         "fonts-dejavu",
         "fonts-dejavu-core",
         "fonts-liberation",
@@ -229,7 +228,7 @@ def setup_venv(dry_run: bool = False):
         try:
             subprocess.run([sys.executable, "-m", "venv", "--system-site-packages", str(venv_dir)], check=True)
             
-            # Ensure proper ownership if created under sudo
+           
             actual_user = get_actual_user()
             if platform.system() == "Linux" and os.geteuid() == 0 and actual_user != "root":
                 subprocess.run(["chown", "-R", f"{actual_user}:{actual_user}", str(venv_dir)], check=False)
