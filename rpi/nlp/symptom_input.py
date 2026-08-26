@@ -57,5 +57,17 @@ def _try_ml_model_prediction(text: str, official_classes: List[str]) -> Dict[str
         model = bundle.get("model")
         disease_labels = bundle.get("disease_labels", {})
 
+        if hasattr(model, "predict_proba"):
+            probs = model.predict_proba([text])[0]
+            classes_in_model = model.classes_
+            for idx, prob in zip(classes_in_model, probs):
+                disease_name = disease_labels.get(int(idx))
+                if disease_name in ml_probs:
+                    ml_probs[disease_name] = round(float(prob), 4)
+    except Exception as exc:
+        LOG.debug("ML model prediction skipped: %s", exc)
+    return ml_probs
+
+
 
 
