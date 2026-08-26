@@ -78,6 +78,15 @@ def process(text: str) -> Dict[str, Any]:
     probabilities = {cls: 0.0 for cls in official_classes}
     detected_symptoms = []
 
+    for disease_cls in official_classes:
+        keywords = SYMPTOM_KNOWLEDGE_BASE.get(disease_cls, [])
+        if not keywords:
+            keywords = [w.lower() for w in disease_cls.split() if len(w) > 3]
+
+        matched = [kw for kw in keywords if kw in lowered]
+
+
+
 
     
 
