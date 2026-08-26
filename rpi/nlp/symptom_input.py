@@ -95,6 +95,10 @@ def process(text: str) -> Dict[str, Any]:
         for disease_cls in official_classes:
             tokens = [t.lower() for t in disease_cls.split()]
             matched_tokens = [t for t in tokens if t in lowered]
+            if matched_tokens:
+                probabilities[disease_cls] = 0.50
+                detected_symptoms.extend(matched_tokens)
+
         
 
 
