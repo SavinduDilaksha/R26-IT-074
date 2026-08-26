@@ -111,6 +111,14 @@ def process(text: str) -> Dict[str, Any]:
                 blended = round(ml_p, 3)
             probabilities[cls_name] = blended
 
+    # Determine top predicted disease
+    if max(probabilities.values(), default=0.0) > 0:
+        top_disease = max(probabilities, key=probabilities.get)
+    else:
+        top_disease = "Healthy Fish"
+        probabilities["Healthy Fish"] = 1.0
+
+
 
         
 
