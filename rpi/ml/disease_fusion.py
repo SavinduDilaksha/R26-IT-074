@@ -23,6 +23,14 @@ def fuse(vision_data: Dict[str, Any] = None, nlp_data: Dict[str, Any] = None) ->
         fused_scores[key] = fused_scores.get(key, 0.0) + (0.50 * v_conf)
         display_names[key] = v_class
 
+    for disease_cls, prob in symptom_probs.items():
+        if "healthy" in disease_cls.lower():
+            continue
+        key = disease_cls.lower()
+        fused_scores[key] = fused_scores.get(key, 0.0) + (0.50 * float(prob))
+        display_names[key] = disease_cls
+
+
 
 
 
