@@ -30,6 +30,18 @@ def fuse(vision_data: Dict[str, Any] = None, nlp_data: Dict[str, Any] = None) ->
         fused_scores[key] = fused_scores.get(key, 0.0) + (0.50 * float(prob))
         display_names[key] = disease_cls
 
+    if not fused_scores:
+        return {
+            "disease": "Healthy Fish",
+            "disease_probability": 0.0,
+            "confidence": 1.0,
+            "reason": "No abnormal visual symptoms or reported text symptoms detected.",
+            "breakdown": {"yolo_class": v_class, "yolo_confidence": v_conf, "symptom_confidence": 0.0},
+        }
+
+
+    
+
 
 
 
