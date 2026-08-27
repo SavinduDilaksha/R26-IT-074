@@ -9,3 +9,7 @@ def fuse(vision_data: Dict[str, Any] = None, nlp_data: Dict[str, Any] = None) ->
     vision_data = vision_data or {}
     nlp_data = nlp_data or {}
 
+    v_class = vision_data.get("disease_class", "Healthy Fish")
+    v_conf = float(vision_data.get("confidence", 0.0))
+
+
