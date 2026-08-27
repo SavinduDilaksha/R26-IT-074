@@ -1,16 +1,3 @@
-/*
- *
- *
- *
- * 
- *  
- * Baud Rate: 9600
- * 
- *
- * Water quality classification and stress decisions are computed by the ML
- * modules on Raspberry Pi.
- */
-
 #include <DallasTemperature.h>
 #include <OneWire.h>
 
