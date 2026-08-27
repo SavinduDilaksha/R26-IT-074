@@ -43,6 +43,13 @@ def fuse(vision_data: Dict[str, Any] = None, nlp_data: Dict[str, Any] = None) ->
     top_disease_name = display_names.get(top_key, top_key.title())
     combined_score = round(float(fused_scores[top_key]), 3)
 
+    nlp_score = 0.0
+    for cls_name, prob in symptom_probs.items():
+        if cls_name.lower() == top_key:
+            nlp_score = float(prob)
+            break
+
+
 
     
 
