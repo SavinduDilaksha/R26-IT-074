@@ -54,7 +54,18 @@ def fuse(vision_data: Dict[str, Any] = None, nlp_data: Dict[str, Any] = None) ->
         f"Visual Model ({v_class} {int(v_conf * 100)}%), "
         f"NLP Symptoms ({int(nlp_score * 100)}%)"
     )
-    
+
+    return {
+        "disease": top_disease_name,
+        "disease_probability": combined_score,
+        "confidence": combined_score,
+        "reason": reason,
+        "breakdown": {
+            "yolo_class": v_class,
+            "yolo_confidence": round(v_conf, 2),
+            "symptom_confidence": round(nlp_score, 2),
+        },
+    }
 
 
 
