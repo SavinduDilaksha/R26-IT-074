@@ -38,7 +38,7 @@ class IonConcentrationReader:
         self.device_id = self.DEVICE_ID
         self.address = self.ADDRESS
 
-        #add comments for this
+        
 
     def _create_client(self, port: str):
         """Create PyModbus serial client instance."""
@@ -51,7 +51,7 @@ class IonConcentrationReader:
             stopbits=self.stopbits,
             timeout=self.timeout
         )
-#added comments
+#function
     def read(self) -> Dict[str, Any]:
         
         timestamp = datetime.now(timezone.utc).isoformat()
