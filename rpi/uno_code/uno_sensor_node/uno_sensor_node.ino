@@ -5,8 +5,7 @@
  * 
  *  
  * Baud Rate: 9600
- * Output Format: Clean telemetry JSON transmitted once per second
- *   {"temp": 25.80, "ph": 7.20, "turbidity": 120.5}
+ * 
  *
  * Water quality classification and stress decisions are computed by the ML
  * modules on Raspberry Pi.
