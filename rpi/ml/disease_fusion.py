@@ -12,4 +12,7 @@ def fuse(vision_data: Dict[str, Any] = None, nlp_data: Dict[str, Any] = None) ->
     v_class = vision_data.get("disease_class", "Healthy Fish")
     v_conf = float(vision_data.get("confidence", 0.0))
 
+    symptom_probs = nlp_data.get("probabilities", {})
+
+
 
