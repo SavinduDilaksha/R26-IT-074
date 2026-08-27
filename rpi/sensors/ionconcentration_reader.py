@@ -38,6 +38,8 @@ class IonConcentrationReader:
         self.device_id = self.DEVICE_ID
         self.address = self.ADDRESS
 
+        #add comments for this
+
     def _create_client(self, port: str):
         """Create PyModbus serial client instance."""
         from pymodbus.client import ModbusSerialClient
