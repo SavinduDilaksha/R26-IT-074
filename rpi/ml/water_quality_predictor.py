@@ -1,13 +1,4 @@
-"""Water Quality Predictor and SHAP Explainable AI Module.
 
-Predicts water quality using pre-trained ML models (LSTM, Random Forest Regressor, Logistic Regression)
-with features: ["PH", "IONCONCENTRATION", "TEMP", "TURBIDITY"].
-
-Supports:
-- Ion concentration from RS485 Modbus RTU reader
-- pH, Temperature, and Turbidity from Arduino Uno serial reader
-- Explainable AI (SHAP) feature contribution analysis and visualizations
-"""
 
 import os
 import json
@@ -31,19 +22,19 @@ DEFAULT_THRESHOLD = 0.5
 
 
 def safe_filename(text: str) -> str:
-    """Makes filenames safe for chart exports."""
+   
     text = str(text).lower().replace(" ", "_").replace("-", "_")
     allowed = "abcdefghijklmnopqrstuvwxyz0123456789_"
     return "".join(ch for ch in text if ch in allowed)
 
 
 def _clean_filename(path_or_str: Union[str, Path]) -> str:
-    """Normalizes Windows backslashes and POSIX forward slashes to extract bare filename."""
+    
     return str(path_or_str).replace("\\", "/").rstrip("/").split("/")[-1]
 
 
 def normalize_shap_values(shap_values_raw: Any) -> np.ndarray:
-    """Normalizes SHAP output into shape: (rows, features)."""
+    
     if isinstance(shap_values_raw, list):
         shap_values_raw = shap_values_raw[0]
 
@@ -59,7 +50,7 @@ def normalize_shap_values(shap_values_raw: Any) -> np.ndarray:
 
 
 class WaterQualityPredictor:
-    """Water Quality ML Predictor & SHAP Explainer."""
+   
 
     def __init__(self, model_dir: Union[str, Path] = WATER_QUALITY_MODEL_DIR):
         self.model_dir = Path(model_dir)
@@ -78,7 +69,7 @@ class WaterQualityPredictor:
         self._load_artifacts()
 
     def _get_candidate_model_paths(self) -> list:
-        """Returns ordered list of candidate model paths to attempt loading."""
+       
         candidates = []
 
         meta_best = self.metadata.get("best_model_path")
@@ -104,7 +95,7 @@ class WaterQualityPredictor:
         return candidates
 
     def _load_single_model(self, model_path: Path) -> bool:
-        """Attempts to load a single model file (.keras or .pkl)."""
+       
         model_path_str = str(model_path)
         if model_path_str.endswith(".keras"):
             try:
@@ -139,7 +130,7 @@ class WaterQualityPredictor:
                 return False
 
     def _load_artifacts(self) -> bool:
-        """Load scaler, model, metadata, and SHAP background data."""
+       
         if self.model is not None and self.scaler is not None:
             return True
 
@@ -202,7 +193,7 @@ class WaterQualityPredictor:
             return False
 
     def prepare_raw_dataframe(self, input_data: Union[pd.DataFrame, Dict[str, Any], list]) -> pd.DataFrame:
-        """Converts SHAP/model input into a clean DataFrame with correct feature order."""
+       
         if isinstance(input_data, pd.DataFrame):
             raw_df = input_data.copy()
         elif isinstance(input_data, dict):
@@ -225,7 +216,7 @@ class WaterQualityPredictor:
         return raw_df
 
     def predict_bad_probability(self, input_data: Union[pd.DataFrame, Dict[str, Any], list]) -> np.ndarray:
-        """Returns BAD water probability array for Keras, sklearn classifier, or sklearn regressor."""
+        
         if self.model is None or self.scaler is None:
             if not self._load_artifacts():
                 raise RuntimeError("Water Quality Predictor model or scaler not loaded.")
@@ -250,14 +241,7 @@ class WaterQualityPredictor:
         return np.clip(raw_pred, 0.0, 1.0)
 
     def extract_feature_values(self, sensor_readings: Dict[str, Any]) -> Dict[str, float]:
-        """Extracts standard feature values from sensor reading payload.
-        
-        Reads:
-        - PH: from Arduino (key 'ph' / 'PH')
-        - IONCONCENTRATION: from Modbus RTU (key 'ionconcentration' / 'IONCONCENTRATION')
-        - TEMP: from Arduino (key 'temperature' / 'temp' / 'TEMP')
-        - TURBIDITY: from Arduino (key 'turbidity' / 'TURBIDITY')
-        """
+    
         ph = self._extract_value(sensor_readings, ["ph", "PH"], default=7.25)
         ionconc = self._extract_value(sensor_readings, ["ionconcentration", "IONCONCENTRATION"], default=345.0)
         temp = self._extract_value(sensor_readings, ["temperature", "temp", "TEMP"], default=26.5)
@@ -290,7 +274,7 @@ class WaterQualityPredictor:
         run_shap: bool = True,
         save_xai: bool = False
     ) -> Dict[str, Any]:
-        """Perform water quality prediction & SHAP explanation on sensor data."""
+        
         features_dict = self.extract_feature_values(sensor_readings)
         df_input = pd.DataFrame([features_dict])[FEATURES]
 
@@ -343,7 +327,7 @@ class WaterQualityPredictor:
         sample_names: Optional[list] = None,
         save_xai: bool = False
     ) -> Dict[str, Any]:
-        """Calculates SHAP explanations for input samples using TreeExplainer, KernelExplainer, or Heuristic fallback."""
+        
         try:
             import shap
             shap_lib_available = True
@@ -421,7 +405,7 @@ class WaterQualityPredictor:
         shap_values: np.ndarray,
         sample_names: Optional[list] = None
     ) -> None:
-        """Saves XAI bar charts and CSV summary files to xai_outputs directory."""
+       
         try:
             import matplotlib
             matplotlib.use("Agg")
@@ -464,7 +448,7 @@ class WaterQualityPredictor:
             LOG.warning("Failed to save XAI visualization outputs: %s", exc)
 
     def _rule_based_fallback(self, features: Dict[str, float]) -> float:
-        """Fallback score calculator if ML model fails."""
+      
         ph = features.get("PH", 7.25)
         ionconc = features.get("IONCONCENTRATION", 345.0)
         temp = features.get("TEMP", 26.5)

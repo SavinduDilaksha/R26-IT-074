@@ -1,8 +1,4 @@
-"""Explainable AI (SHAP) module.
 
-Generates feature importance, contribution percentages, and human-readable natural-language
-explanations for water quality predictions and system telemetry.
-"""
 
 from typing import Dict, Any
 import numpy as np
@@ -19,20 +15,7 @@ REFERENCE_VALUES = {
 
 
 def explain(water_quality_data: Dict[str, Any]) -> Dict[str, Any]:
-    """Generate feature contributions and natural-language XAI explanations.
-    
-    Accepts result dictionary from WaterQualityPredictor (or raw sensor data).
-    
-    Returns:
-    {
-        "feature_importance": {"TURBIDITY": 41.0, "PH": 24.0, ...},
-        "contribution_percentages": {...},
-        "natural_language_explanation": str,
-        "primary_factor": str,
-        "primary_contribution_percentage": float,
-        "shap_backend": str
-    }
-    """
+
     inputs = water_quality_data.get("inputs_used", {})
     if not inputs:
         inputs = REFERENCE_VALUES
