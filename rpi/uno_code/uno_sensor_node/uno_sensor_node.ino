@@ -2,7 +2,7 @@
  *
  *
  *
- *   - DS18B20 Temperature Sensor: Digital Pin 2 (with 4.7k pull-up resistor to 5V)
+ *  
  *   - PH-4502C Analog pH Sensor: Analog Pin A0
  *   - Analog Turbidity Sensor: Analog Pin A1
  *   - USB Serial: Arduino Uno USB port connected to Raspberry Pi (/dev/ttyUSB1)
