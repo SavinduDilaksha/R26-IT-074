@@ -14,5 +14,15 @@ def fuse(vision_data: Dict[str, Any] = None, nlp_data: Dict[str, Any] = None) ->
 
     symptom_probs = nlp_data.get("probabilities", {})
 
+    fused_scores = {}
+    display_names = {}
+
+    
+    if v_class and "healthy" not in v_class.lower():
+        key = v_class.lower()
+        fused_scores[key] = fused_scores.get(key, 0.0) + (0.50 * v_conf)
+        display_names[key] = v_class
+
+
 
 
