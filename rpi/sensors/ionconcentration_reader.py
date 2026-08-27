@@ -51,7 +51,7 @@ class IonConcentrationReader:
             stopbits=self.stopbits,
             timeout=self.timeout
         )
-#function
+
     def read(self) -> Dict[str, Any]:
         
         timestamp = datetime.now(timezone.utc).isoformat()
