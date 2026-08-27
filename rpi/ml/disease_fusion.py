@@ -49,6 +49,13 @@ def fuse(vision_data: Dict[str, Any] = None, nlp_data: Dict[str, Any] = None) ->
             nlp_score = float(prob)
             break
 
+    reason = (
+        f"Fused evidence for '{top_disease_name}': "
+        f"Visual Model ({v_class} {int(v_conf * 100)}%), "
+        f"NLP Symptoms ({int(nlp_score * 100)}%)"
+    )
+    
+
 
 
     
