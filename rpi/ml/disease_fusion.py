@@ -39,6 +39,10 @@ def fuse(vision_data: Dict[str, Any] = None, nlp_data: Dict[str, Any] = None) ->
             "breakdown": {"yolo_class": v_class, "yolo_confidence": v_conf, "symptom_confidence": 0.0},
         }
 
+    top_key = max(fused_scores, key=fused_scores.get)
+    top_disease_name = display_names.get(top_key, top_key.title())
+    
+
 
     
 
