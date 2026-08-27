@@ -1,5 +1,5 @@
 /*
- * Arduino Uno Sensor Telemetry Node for Smart Aquarium Monitoring System
+ *
  *
  * Hardware Connections:
  *   - DS18B20 Temperature Sensor: Digital Pin 2 (with 4.7k pull-up resistor to 5V)
