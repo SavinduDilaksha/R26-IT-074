@@ -251,7 +251,7 @@ class FeederServo:
             return True
         except Exception as exc_gpio:
             LOG.debug("RPi.GPIO / rpi-lgpio backend unavailable: %s", exc_gpio)
-#add
+
     
         try:
             from gpiozero import AngularServo
