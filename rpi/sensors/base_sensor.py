@@ -17,7 +17,7 @@ class BaseSensor(ABC):
         pass
 
     def read(self) -> Dict[str, Any]:
-       
+        """Return standardized sensor reading format."""
         timestamp = datetime.now(timezone.utc).isoformat()
         try:
             val = self.read_raw()
