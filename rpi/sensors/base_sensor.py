@@ -6,8 +6,7 @@ from typing import Dict, Any
 
 
 class BaseSensor(ABC):
-    """Abstract base class for aquarium sensors."""
-
+    
     def __init__(self, name: str, unit: str):
         self.name = name
         self.unit = unit
