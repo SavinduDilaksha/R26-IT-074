@@ -13,7 +13,7 @@ class BaseSensor(ABC):
 
     @abstractmethod
     def read_raw(self) -> Any:
-       
+        """Perform hardware-specific sensor read."""
         pass
 
     def read(self) -> Dict[str, Any]:
