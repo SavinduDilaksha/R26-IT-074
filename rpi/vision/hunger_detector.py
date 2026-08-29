@@ -274,7 +274,7 @@ class HungerDetector:
                 "source": "error",
                 "error": str(exc),
             }
-#add
+
 
 # Module-level singleton instance for direct function calls
 _DETECTOR = HungerDetector()
