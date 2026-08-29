@@ -15,7 +15,7 @@ BASE_DIR = Path(__file__).resolve().parent
 if str(BASE_DIR) not in sys.path:
     sys.path.insert(0, str(BASE_DIR))
 
- 
+#add function 
 
 def preview_camera(camera_index: int, width: int = 640, height: int = 480) -> None:
     """Open and stream live video preview for the specified camera index."""
