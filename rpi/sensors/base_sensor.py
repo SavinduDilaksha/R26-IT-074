@@ -24,4 +24,4 @@ class BaseSensor(ABC):
             return {"value": val, "unit": self.unit, "timestamp": timestamp}
         except Exception as exc:
             return {"value": None, "unit": self.unit, "timestamp": timestamp, "error": str(exc)}
-#add file
+#add
