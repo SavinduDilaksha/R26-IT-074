@@ -1,20 +1,3 @@
-/*
- * Arduino Uno Sensor Telemetry Node for Smart Aquarium Monitoring System
- *
- * Hardware Connections:
- *   - DS18B20 Temperature Sensor: Digital Pin 2 (with 4.7k pull-up resistor to 5V)
- *   - PH-4502C Analog pH Sensor: Analog Pin A0
- *   - Analog Turbidity Sensor: Analog Pin A1
- *   - USB Serial: Arduino Uno USB port connected to Raspberry Pi (/dev/ttyUSB1)
- *
- * Baud Rate: 9600
- * Output Format: Clean telemetry JSON transmitted once per second
- *   {"temp": 25.80, "ph": 7.20, "turbidity": 120.5}
- *
- * Water quality classification and stress decisions are computed by the ML
- * modules on Raspberry Pi.
- */
-
 #include <DallasTemperature.h>
 #include <OneWire.h>
 
