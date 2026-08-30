@@ -299,5 +299,5 @@ class FeederServo:
         """Reset daily feeding counter at midnight."""
         self.daily_feed_count = 0
 
-       #addd 
+       
     
