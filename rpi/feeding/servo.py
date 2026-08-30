@@ -298,4 +298,6 @@ class FeederServo:
     def reset_daily_count(self) -> None:
         """Reset daily feeding counter at midnight."""
         self.daily_feed_count = 0
+
+        #add
     
