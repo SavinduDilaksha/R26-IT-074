@@ -1,0 +1,13 @@
+{
+  "angle": 0,
+  "rounds": 0,
+  "dispensed": false,
+  "hungry_count": 0,
+  "daily_count": 0,
+  "hardware_actuated": false,
+  "is_automatic": false,
+  "last_dispense_time": null,
+  "last_dispense_timestamp": null,
+  "cooldown_minutes": 30,
+  "timestamp": null
+}

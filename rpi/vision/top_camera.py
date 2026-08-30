@@ -85,3 +85,4 @@ class TopCamera:
                 self.capture = None
                 LOG.info("Top Camera closed.")
             self._failed_hw = False
+

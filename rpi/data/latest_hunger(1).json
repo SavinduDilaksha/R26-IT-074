@@ -1,0 +1,15 @@
+{
+  "hungry_count": 0,
+  "average_count": 0.0,
+  "presence_ratio": 0.0,
+  "is_truly_hungry": false,
+  "hunger_level": "Normal",
+  "confidence": 0.0,
+  "observation_duration_seconds": 0.0,
+  "frames_analyzed": 0,
+  "cooldown_active": false,
+  "cooldown_remaining_seconds": 0,
+  "cooldown_total_minutes": 30,
+  "source": "initial_state",
+  "timestamp": null
+}
