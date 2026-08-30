@@ -283,3 +283,4 @@ _DETECTOR = HungerDetector()
 def detect(frame) -> Dict[str, Any]:
     """Detect hungry fish from Top Camera 2 frame using YOLOv8 ONNX model."""
     return _DETECTOR.detect(frame)
+#add
