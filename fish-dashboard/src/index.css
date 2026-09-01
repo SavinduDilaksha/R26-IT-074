@@ -1,0 +1,130 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    background-color: #06111e;
+    color: #f0f9ff;
+    background-image:
+      radial-gradient(ellipse at 50% 0%, rgba(14, 165, 233, 0.12) 0%, transparent 65%),
+      radial-gradient(ellipse at 80% 80%, rgba(20, 184, 166, 0.08) 0%, transparent 55%),
+      radial-gradient(ellipse at 15% 70%, rgba(168, 85, 247, 0.06) 0%, transparent 50%);
+    background-attachment: fixed;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  * {
+    box-sizing: border-box;
+  }
+  ::selection {
+    background: rgba(20, 184, 166, 0.3);
+    color: #f0fdfa;
+  }
+}
+
+@layer components {
+  /* Ultra-sleek enterprise glass card */
+  .glass {
+    background: rgba(11, 25, 44, 0.65);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(56, 189, 248, 0.12);
+    box-shadow: 0 10px 30px -10px rgba(2, 12, 27, 0.5);
+  }
+  .glass-bright {
+    background: rgba(14, 35, 60, 0.75);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(56, 189, 248, 0.22);
+    box-shadow: 0 14px 40px -12px rgba(2, 12, 27, 0.6);
+  }
+  .btn-primary {
+    @apply bg-ocean-600 hover:bg-ocean-500 text-white font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 active:scale-[0.98] shadow-md shadow-ocean-950/50 border border-ocean-500/30 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer;
+  }
+  .btn-ghost {
+    @apply bg-ocean-950/40 hover:bg-ocean-900/60 text-ocean-200 font-medium px-4 py-2 rounded-xl transition-all duration-200 border border-ocean-700/40 hover:border-ocean-500/40 cursor-pointer;
+  }
+  .btn-accent {
+    @apply bg-gradient-to-r from-teal-400 via-cyan-400 to-teal-300 hover:brightness-110 text-slate-950 font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 active:scale-[0.98] shadow-lg shadow-teal-500/20 cursor-pointer;
+  }
+  .input-field {
+    @apply w-full bg-ocean-950/80 border border-ocean-800/80 text-ocean-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-teal-400/80 focus:ring-2 focus:ring-teal-500/15 transition-all placeholder-ocean-600;
+  }
+  .select-field {
+    @apply w-full bg-ocean-950/80 border border-ocean-800/80 text-ocean-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-teal-400/80 transition-all cursor-pointer;
+  }
+  .card {
+    @apply glass rounded-2xl p-5;
+  }
+  .card-bright {
+    @apply glass-bright rounded-2xl p-5;
+  }
+  .badge {
+    @apply text-[10px] font-mono font-medium uppercase tracking-wider px-2.5 py-0.5 rounded-full border;
+  }
+  .badge-fed {
+    @apply badge bg-teal-500/15 text-teal-300 border-teal-500/30;
+  }
+  .badge-hungry {
+    @apply badge bg-rose-500/15 text-rose-300 border-rose-500/30;
+  }
+  .badge-info {
+    @apply badge bg-ocean-500/15 text-ocean-200 border-ocean-500/25;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    background: linear-gradient(135deg, #ffffff 0%, #bae6fd 40%, #2dd4bf 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .text-gradient-cyan {
+    background: linear-gradient(135deg, #38bdf8 0%, #2dd4bf 50%, #c084fc 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* Enterprise Tech Grid Overlay */
+.tech-grid-bg {
+  background-size: 32px 32px;
+  background-image:
+    linear-gradient(to right, rgba(56, 189, 248, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(56, 189, 248, 0.03) 1px, transparent 1px);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(56, 189, 248, 0.15);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(56, 189, 248, 0.3);
+}
