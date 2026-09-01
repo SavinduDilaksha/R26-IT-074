@@ -1,0 +1,976 @@
+
+=== PAGE 1 ===
+Smart Aquarium Monitoring System  Technical Reference
+1
+ SMART AQUARIUM
+MONITORING SYSTEM
+ Complete System Architecture & Technical Reference
+SMART AQUARIUM — 5-STAGE MONITORING CYCLE
+1
+ Sensors &
+ Behavior
+ 3 min
+2
+ Disease
+Observation
+ 3 min
+3
+ Hunger &
+ Feeding
+ 3 min
+4
+Water Quality
+ & XAI
+ < 2 s
+5
+ Firebase
+Cloud Sync
+ < 2 s
+Sequential orchestration coordinated by master.py
+ Edge AI  Sensors  Computer Vision  Machine Learning  Automatic Feeding  Cloud Sync
+EDGE PLATFORM
+Raspberry Pi 4B · 2GB RAM
+PIPELINE
+5-stage sequential monitoring cycle
+DATA
+Atomic JSON state + Firebase RTDB
+
+=== PAGE 2 ===
+Smart Aquarium Monitoring System  Technical Reference
+2
+Contents
+ 01  System Architecture, Orchestration & Core Utilities
+02  Sensors, Arduino Node & Telemetry Interfaces
+03  Computer Vision, YOLOv8 Tracking & Behavioral Analysis
+04  Machine Learning, NLP & Explainable AI (SHAP)
+05  Automatic Feeder & MG90 Servo Controller
+06  Firebase Cloud Synchronization & Android App Bridge
+This book consolidates the six supplied technical documents into one continuous reference. The original terminology,
+configuration values, interfaces, model names, and operational behavior are retained.
+
+=== PAGE 3 ===
+Smart Aquarium Monitoring System  Technical Reference
+3
+CHAPTER 01
+01 — System Architecture, Orchestration & Core
+Utilities
+SMART AQUARIUM — 5-STAGE MONITORING CYCLE
+1
+ Sensors &
+ Behavior
+ 3 min
+2
+ Disease
+Observation
+ 3 min
+3
+ Hunger &
+ Feeding
+ 3 min
+4
+Water Quality
+ & XAI
+ < 2 s
+5
+ Firebase
+Cloud Sync
+ < 2 s
+Sequential orchestration coordinated by master.py
+ System orchestration overview
+Overview
+The Smart Aquarium Monitoring System is built on a decoupled, stage-based batch pipeline architecture
+optimized for 24/7 continuous operation on a Raspberry Pi 4B (2GB RAM).
+Instead of monolithic scripts or competing background threads that fight for camera and CPU resources, the system
+executes a structured 5-stage sequential monitoring cycle coordinated by master.py. Modules communicate
+exclusively through atomic JSON files (storage/json_store.py) or return values passed by the orchestrator.
+---
+1. System Pipeline Stages (master.py)
+Each full monitoring cycle executes 5 distinct pipeline stages:
+ Diagram definition
+flowchart TD
+    S1["Stage 1: Sensors & 3-Min Trajectory Tracking\n(master.py::stage_sensors_and_stress)"]
+    S2["Stage 2: Side-View Disease Observation\n(master.py::stage_disease)"]
+    S3["Stage 3: Top-View Hunger Observation & Feeder Dispense\n(master.py::stage_hunger_and_feeding)"]
+    S4["Stage 4: Water Quality ML & SHAP Explainability\n(master.py::stage_water_quality_and_shap)"]
+    S5["Stage 5: Firebase Realtime Database Sync\n(master.py::stage_firebase_sync)"]
+    S1 --> S2 --> S3 --> S4 --> S5 --> S1
+
+=== PAGE 4 ===
+Smart Aquarium Monitoring System  Technical Reference
+4
+Stage Breakdown:
+ Stage
+Duration
+Primary Operations
+Output JSON Files
+Stage 1:
+Sensors &
+Behavior
+180 sec (3 min)
+Read Arduino UART & Modbus RS485; track fish at 30 FPS with
+YOLOv8 ONNX; log coordinates to movement_log.jsonl; run
+post-session trajectory analyzer; classify stress (13-feature ML).
+latest_sensor.json<br>latest_
+behavior.json<br>latest_stres
+s.json<br>latest_stress_frame
+.jpg
+Stage 2:
+Disease
+Detection
+180 sec (3 min)
+10s warmup delay; periodic center 256x256 ROI snapshot
+capture every 30s; run ONNX disease classifier; fetch user
+symptoms from Firebase; fuse visual + NLP evidence.
+latest_disease.json<br>latest
+_disease_vision.json<br>lates
+t_disease_nlp.json<br>latest_
+disease_frame.jpg
+Stage 3: Hunger
+& Feeder
+180 sec (3 min)
+Check 30-min cooldown; observe Top Camera RHS feeding
+zone; calculate temporal surface attendance ratio; trigger MG90
+servo (0, 1, 2, or 3 rotations).
+latest_hunger.json<br>latest_
+feed.json<br>latest_hunger_fr
+ame.jpg
+Stage 4: Water
+Quality & XAI
+< 2 sec
+Predict water quality using Random Forest / LSTM; compute
+SHAP feature contributions; determine actionable remediation
+steps.
+latest_water_quality.json<br>
+latest_shap.json
+Stage 5: Cloud
+Sync
+< 2 sec
+Sanitize dictionary keys and upload state payloads to Firebase
+Realtime Database.
+Cloud RTDB Nodes
+---
+2. Command Line Interface & Usage
+Running the Master Pipeline
+ Code / configuration
+# Standard 24/7 continuous operation
+python3 master.py
+# Run a single monitoring cycle and exit (useful for cron or testing)
+python3 master.py --once
+# Clear active post-feeding cooldown timer before starting
+python3 master.py --reset-cooldown
+# Bypass all post-feeding cooldown checks during this session
+python3 master.py --skip-cooldown
+Running Headless vs Desktop GUI Preview
+  With HDMI display / Desktop session: Real-time OpenCV visualization windows open automatically with bounding
+ boxes, zone lines, HUD stats, and countdown timers.
+ Headless mode (SSH / background service): Set HEADLESS=1 to disable OpenCV GUI popups:
+ ```bash
+HEADLESS=1 python3 master.py
+```
+---
+3. Central Configuration (config.py)
+Configuration is managed as a single source of truth in config.py and dynamically loaded from
+data/config.json.
+Key Configuration Parameters:
+ Code / configuration
+{
+
+=== PAGE 5 ===
+Smart Aquarium Monitoring System  Technical Reference
+5
+  "cameras": {
+    "side_camera_index": 0,
+    "top_camera_index": 2
+  },
+  "sensor_config": {
+    "arduino_serial_port": "/dev/ttyUSB1",
+    "ionconcentration_serial_port": "/dev/ttyUSB0"
+  },
+  "vision": {
+    "fish_confidence": 0.20,
+    "max_tracked_fish": 4,
+    "water_level_percent": 0.15,
+    "top_region_percent": 0.30,
+    "bottom_region_percent": 0.25,
+    "gravel_level_percent": 0.10,
+    "send_stress_roi_to_disease": true,
+    "stress_model_mode": "ml"
+  },
+  "servo": {
+    "rotate_angle": 180,
+    "rotate_speed_seconds": 0.5,
+    "max_daily_feedings": 10,
+    "max_daily_food_grams": 5.0,
+    "portion_grams_per_turn": 0.05,
+    "portion_unit": "g",
+    "post_feed_cooldown_minutes": 30
+  },
+  "firebase": {
+    "firebase_database_url": "https://aqua-9e38e-default-rtdb.firebaseio.com"
+  }
+}
+Dynamic Functions:
+  load_config() -> dict: Reads data/config.json and deep-merges with DEFAULT_CONFIG.
+  save_config(new_config: dict) -> bool: Atomically writes updated settings and reloads runtime module
+ globals.
+---
+4. Atomic JSON Persistence (storage/json_store.py)
+To prevent partial writes, file corruption during power cuts, or concurrent read/write collisions on the Raspberry Pi:
+  Atomic Writes (save_json): Writes data to a temporary file via tempfile.mkstemp(), flushes and executes
+ os.fsync(), then atomically renames/replaces it with os.replace().
+ Thread & Process Safety: Wrapped in a reentrant lock (threading.RLock()).
+  Automatic UTC Timestamping: Injects "timestamp": "2026-08-22T09:00:00Z" into dictionary payloads
+ automatically.
+ Backup Fallback (load_json): If a file is unreadable or corrupted, automatically falls back to .bak files.
+ ---
+5. System Diagnostics & Hardware Verification
+Unified Test Suite (check.py)
+Provides interactive and CLI testing for all connected cameras and serial sensors:
+ Code / configuration
+# Interactive test menu
+python3 check.py
+# Test all cameras and serial ports sequentially
+python3 check.py --all
+# Live video preview for a specific camera
+python3 check.py --cam 0
+python3 check.py --cam 2
+
+=== PAGE 7 ===
+Smart Aquarium Monitoring System  Technical Reference
+7
+CHAPTER 02
+02 — Sensors, Arduino Node & Telemetry
+Interfaces
+SENSOR ACQUISITION & TELEMETRY
+ARDUINO UNO
+DS18B20  → Temperature
+A0 → pH
+A1 → Turbidity
+USB / 9600 baud → Pi
+RS485 MODBUS RTU  Slave 1  Register 20
+Raspberry Pi 4B
+Python readers
+JSON contracts
+latest_sensor.json
+USB Serial
+ JSON
+temp
+ pH
+NTU / EC
+ Sensor acquisition and telemetry path
+Overview
+The environmental monitoring subsystem combines an Arduino Uno sensor node (handling analog acquisition and
+1-Wire protocol) and an RS485 Modbus RTU industrial probe connected over USB serial to the Raspberry Pi 4B.
+---
+1. Hardware Sensor Allocation & Pinout
+ Code / configuration
++-------------------------------------------------------------------------+
+|                              ARDUINO UNO                                |
+|                                                                         |
+|  Digital Pin 2 (1-Wire)  <---> DS18B20 Digital Temperature Sensor       |
+|                                (Requires 4.7kΩ pull-up resistor to 5V)  |
+|  Analog Pin A0           <---> PH-4502C Analog pH Sensor Module         |
+|  Analog Pin A1           <---> Analog Turbidity Sensor Module           |
+|  USB Port (/dev/ttyUSB1) <---> Raspberry Pi 4B USB Serial Port (9600)   |
++-------------------------------------------------------------------------+
++-------------------------------------------------------------------------+
+|                       RS485 MODBUS RTU SENSOR                           |
+|                                                                         |
+|  RS485 A/B Differential <---> USB-RS485 Industrial Dongle               |
+|  USB Port (/dev/ttyUSB0) <---> Raspberry Pi 4B USB Serial Port (9600)   |
+|  Slave ID: 1 | Register Address: 20 | Function: Read Holding (0x03)     |
++-------------------------------------------------------------------------+
+---
+2. Arduino Sensor Node Firmware
+(uno_code/uno_sensor_node/uno_sensor_node.ino)
+The Arduino Uno performs hardware-level sampling and digital signal processing:
+A. DS18B20 Temperature Acquisition (1-Wire)
+  Utilizes OneWire.h and DallasTemperature.h libraries.
+  Requests temperature conversions and queries index 0.
+ 
+=== PAGE 8 ===
+Smart Aquarium Monitoring System  Technical Reference
+8
+ Handles disconnected state gracefully (DEVICE_DISCONNECTED_C -> null).
+ 
+B. 10-Sample Trimmed Mean Filter (pH & Turbidity)
+To eliminate electrical noise from aquarium water pumps and LED drivers, analog pins A0 and A1 execute a
+10-sample bubble sort, discard the 2 lowest and 2 highest readings, and return the average of the middle 6 samples:
+ Code / configuration
+float readAnalogSampled(int pin) {
+  int buffer_arr[10];
+  for (int i = 0; i < 10; i++) {
+    buffer_arr[i] = analogRead(pin);
+    delay(10);
+  }
+  // Bubble sort 10 samples
+  for (int i = 0; i < 9; i++) {
+    for (int j = i + 1; j < 10; j++) {
+      if (buffer_arr[i] > buffer_arr[j]) {
+        int temp = buffer_arr[i];
+        buffer_arr[i] = buffer_arr[j];
+        buffer_arr[j] = temp;
+      }
+    }
+  }
+  // Average the middle 6 samples
+  unsigned long avgval = 0;
+  for (int i = 2; i < 8; i++) {
+    avgval += buffer_arr[i];
+  }
+  return (float)avgval / 6.0;
+}
+C. Calibrated Formulations
+  pH Formulation:
+ $$\text{Voltage} = \frac{\text{ADC} \times 5.0}{1023.0}$$
+$$\text{pH} = 7.0 + \frac{2.50 - \text{Voltage}}{0.18}$$
+  Turbidity Formulation:
+ $$\text{NTU} = -1120.4 \times V^2 + 5742.3 \times V - 4352.9$$
+D. Single-Line Atomic JSON Transmission
+Uses dtostrf() (to avoid 8-bit AVR %f formatting bugs) and emits telemetry once per second:
+ Code / configuration
+{"temp":26.25,"ph":7.15,"turbidity":1810.0}
+---
+3. Python Arduino Reader (sensors/arduino_reader.py)
+  Interface: Hardware UART / USB serial via pyserial at 9600 baud.
+  Port: Configured in config.py as /dev/ttyUSB1.
+  In-Memory Cache: Telemetry payload is cached with a _CACHE_TTL = 2.0 seconds to reduce unnecessary I/O
+ overhead.
+ Output Data Contract (read()):
+ ```python
+{
+"temperature": {"value": 26.25, "unit": "C", "timestamp": "2026-08-22T09:00:00Z", "source": "arduino_serial"},
+"ph": {"value": 7.15, "unit": "pH", "timestamp": "2026-08-22T09:00:00Z", "source": "arduino_serial"},
+
+=== PAGE 9 ===
+Smart Aquarium Monitoring System  Technical Reference
+9
+"turbidity": {"value": 1810.0,"unit": "NTU", "timestamp": "2026-08-22T09:00:00Z", "source": "arduino_serial"}
+}
+```
+---
+4. Python Modbus RTU Reader (sensors/ionconcentration_reader.py)
+  Protocol: Industrial RS485 Modbus RTU via pymodbus.client.ModbusSerialClient.
+  Serial Settings: 9600 Baud, 8 Data Bits, No Parity (N), 1 Stop Bit, 1.5s Timeout.
+  Modbus Addressing:
+  Slave ID (device_id): 1
+  Holding Register (address): 20
+  Version Compatibility: Includes dual support for PyModbus 3.8+ (device_id=1) and legacy versions (slave=1).
+  Output Data Contract (read()):
+ ```python
+{
+"value": 345.0,
+"unit": "us/cm",
+"timestamp": "2026-08-22T09:00:00Z",
+"source": "modbus_rtu"
+}
+```
+---
+5. Sensor Telemetry Schema (data/latest_sensor.json)
+When Stage 1 completes, master.py merges all sensor readings into data/latest_sensor.json:
+ Code / configuration
+{
+  "temperature": {
+    "value": 26.25,
+    "unit": "C",
+    "timestamp": "2026-08-22T09:00:00Z",
+    "source": "arduino_serial"
+  },
+  "ph": {
+    "value": 7.15,
+    "unit": "pH",
+    "timestamp": "2026-08-22T09:00:00Z",
+    "source": "arduino_serial"
+  },
+  "turbidity": {
+    "value": 1810.0,
+    "unit": "NTU",
+    "timestamp": "2026-08-22T09:00:00Z",
+    "source": "arduino_serial"
+  },
+  "ionconcentration": {
+    "value": 345.0,
+    "unit": "us/cm",
+    "timestamp": "2026-08-22T09:00:00Z",
+    "source": "modbus_rtu"
+  }
+}
+
+=== PAGE 10 ===
+Smart Aquarium Monitoring System  Technical Reference
+10
+CHAPTER 03
+03 — Computer Vision, YOLOv8 Tracking &
+Behavioral Analysis
+COMPUTER VISION PIPELINE
+Camera
+640×480
+ROI / Mask
+real-time
+YOLOv8 ONNX
+CPU  4 threads
+NMS + EMA
+real-time
+Tracking
+≤ 4 fish
+Behavior / Disease
+real-time
+ Dual-camera computer vision path
+Overview
+The Computer Vision subsystem manages two dedicated camera streams:
+ 1. Camera 1 (Side View): Fish detection, centroid tracking, continuous 3-minute movement trajectory logging,
+ behavioral dwell metrics, and centered ROI disease analysis.
+2. Camera 2 (Top View): Surface feeding zone attendance monitoring, fish counting in the active RHS ROI, and hunger
+ classification.
+---
+1. Camera Capture Modules
+Side Camera (vision/side_camera.py)
+  Single-Owner Pattern: The video device (/dev/video0 on Linux via V4L2 or default DirectShow on Windows) is
+ opened and shared across tracking, behavior, and disease detection to prevent duplicate OpenCV handle locks.
+ Synthetic Demonstration Fallback: If physical hardware is disconnected (or MOCK_CAMERAS=1), automatically
+ generates a 30 FPS animated synthetic aquarium stream featuring simulated swimming fish, water level boundary
+lines, and gravel level lines.
+Top Camera (vision/top_camera.py)
+  Strict Hardware Interface: Interfaces exclusively with Camera 2 (/dev/video2 or index 2).
+  No Synthetic Fallback: Returns None when hardware is disconnected so feeding logic is never triggered erroneously
+ by fake video feeds.
+---
+2. YOLOv8 ONNX Fish Tracker (vision/fish_tracker.py)
+High-performance CPU inference running natively on the Raspberry Pi 4B quad-core processor via onnxruntime.
+ Code / configuration
+Raw Frame (640x480)
+   ■
+   ■■■ Pre-Inference Exclusion: Zero-out pixels above Water Line and below Gravel Line
+   ■
+   ■■■ Resize & Normalize: (640x640) float32 / 255.0 CHW
+
+=== PAGE 11 ===
+Smart Aquarium Monitoring System  Technical Reference
+11
+   ■
+   ■■■ ONNX Runtime Inference: models/vision/fish_detector_yolov8.onnx (4 CPU Threads)
+   ■
+   ■■■ Confidence Filter (Threshold: 0.20)
+   ■
+   ■■■ Non-Maximum Suppression (IoU: 0.45, pure NumPy, no PyTorch)
+   ■
+   ■■■ Scaled Bounding Boxes Clamped to Tank Dimensions
+   ■
+   ■■■ Centroid Matching & EMA Temporal Smoothing (alpha = 0.70)
+Key Technical Features:
+ 1. Pre-Inference Exclusion: To eliminate false positives from surface reflections and gravel pebbles, pixels in the top
+ 15% (WATER_LEVEL_PERCENT) and bottom 10% (GRAVEL_LEVEL_PERCENT) are zeroed out before inference.
+2. Exponential Moving Average (EMA) Smoothing:
+ $$\text{Box}_{\text{smooth}} = 0.70 \times \text{Box}_{\text{current}} + 0.30 \times \text{Box}_{\text{previous}}$$
+Eliminates jitter and bounding box flicker across sequential frames.
+ 3. Persistent Identity Tracking: Tracks up to MAX_TRACKED_FISH = 4 individuals using Euclidean distance
+ nearest-centroid matching with automatic track pruning for targets inactive $> 60\text{s}$.
+---
+3. Behavioral Trajectory Analysis (vision/fish_behavior.py)
+A decoupled 2-stage architecture separates high-speed real-time logging from post-session batch time-series
+computation:
+Stage 1: Real-Time Coordinate Logger (TrajectoryLogger)
+  Appends lightweight timestamped tracking records to data/movement_log.jsonl at 30 FPS.
+  Format per line:
+ ```json
+{"t": 1724300000.123, "id": 1, "x": 320.5, "y": 240.2, "bbox": [280.0, 200.0, 360.0, 280.0], "conf": 0.85, "reg": "middle"}
+```
+Stage 2: 3-Minute Post-Session Timeline Analyzer (TrajectoryAnalyzer)
+Reconstructs the full timeline per fish and computes 9 Kinematic Behavioral Indicators:
+Metric
+Calculation / Definition
+Clinical / Biological Significance
+bottom_ratio
+$\text{bottom\_dwell\_time} /
+\text{total\_tracked\_time}$
+Fish sinking or bottom-hiding due to stress/exhaustion.
+longest_bottom_seconds
+Longest uninterrupted continuous bottom dwell
+Severe lethargy indicator.
+bottom_entries_rate
+Transitions into bottom zone per minute
+Vertical relocation frequency.
+top_ratio
+$\text{top\_dwell\_time} /
+\text{total\_tracked\_time}$
+Surface feeding and swimming activity.
+surface_visits_rate
+Number of distinct surface visits per minute
+Surface exploration rate.
+time_between_top_visits
+Average elapsed seconds between surface visits
+Swimming periodicity.
+freeze_ratio
+Total freezing time ($\ge 10\text{s}$ immobility) /
+total time
+Stress response / shock.
+immobility_events_rate
+Immobility episodes ($< 5\text{px}$ displacement
+for $\ge 10\text{s}$) per min
+Acute freezing index.
+
+=== PAGE 12 ===
+Smart Aquarium Monitoring System  Technical Reference
+12
+Metric
+Calculation / Definition
+Clinical / Biological Significance
+mean_speed
+Total Euclidean distance traveled / tracked
+seconds
+Swimming velocity ($\text{px}/\text{s}$).
+shoaling_score
+Spatial clustering coefficient $[0.0 - 1.0]$ across
+co-occurring fish
+Social cohesion index.
+---
+4. Top-Camera Hunger Detection (vision/hunger_detector.py)
+Monitors Camera 2 (Top View) during Stage 3 (3-minute observation):
+A. Spatial Feeding Zone Partitioning
+ Code / configuration
++-----------------------------------+-----------------------------------+
+|     LEFT-HAND SIDE (LHS)          |       RIGHT-HAND SIDE (RHS)       |
+|                                   |                                   |
+|   Non-Feeding Zone (Ignored)      |     FEEDING AREA (Active ROI)     |
+|   Fish detected here do NOT       |     Fish detected here COUNT      |
+|   trigger the food dispenser.     |     towards the hunger score.     |
++-----------------------------------+-----------------------------------+
+B. Temporal Averaging & Sustained Attendance Window
+To avoid accidental food dispensing from transient pass-through fish:
+  Requires Surface Attendance Ratio $\ge 30\%$ across the 3-minute window.
+  Requires Average Feeding ROI Count $\ge 0.5\text{ fish}$.
+  Evaluates discrete hunger tiers:
+  $< 0.5\text{ avg fish} \implies \textbf{Normal / Not Hungry}$ ($0\text{ rotations}$).
+  $0.5 \le \text{avg} < 1.5 \implies \textbf{Low Hunger}$ ($1\text{ rotation}$).
+  $1.5 \le \text{avg} < 2.5 \implies \textbf{Moderate Hunger}$ ($2\text{ rotations}$).
+  $\ge 2.5 \implies \textbf{High Hunger}$ ($3\text{ rotations}$).
+ ---
+5. Side-View Disease Detection (vision/disease_detector.py)
+  Model: models/disease/fish_disease_model.onnx (4 CPU threads).
+  Target Classes (class_names.json):
+ 1. Bacterial Red disease
+ 2. Bacterial diseases - Aeromoniasis
+ 3. Bacterial gill disease
+ 4. Fungal diseases Saprolegniasis
+ 5. Healthy Fish
+ 6. Parasitic diseases
+ 7. Viral diseases White tail disease
+  Center 256x256 Target Box: During Stage 2, the user has a 10-second preparation countdown to position the
+ target fish/card within the center $256 \times 256$ ROI. Automatic snapshot inference triggers every 30 seconds (or
+immediately upon pressing [SPACEBAR]).
+
+=== PAGE 13 ===
+Smart Aquarium Monitoring System  Technical Reference
+13
+CHAPTER 04
+04 — Machine Learning, NLP & Explainable AI
+(SHAP)
+MULTIMODAL ML & EXPLAINABLE AI
+Behavior
+9 metrics
+Sensors
+pH  Temp
+Turbidity  EC
+13 Features
+Stress model
+Water Quality
+RF / LSTM / LR
+SHAP
+Attribution
+NLP + Vision
+Disease fusion
+ Multimodal ML and explainability path
+Overview
+The machine learning subsystem fuses multi-modal observations (computer vision tracking, physical water quality
+sensors, and natural language symptom descriptions) to deliver:
+ 1. Multimodal Fish Stress Classification (3 classes + continuous score).
+ 2. Water Quality Index Prediction (Good vs. Bad water probability).
+ 3. Explainable AI (SHAP) with actionable remediation recommendations.
+ 4. NLP Symptom Extraction & Evidence Fusion for clinical disease diagnosis.
+ ---
+1. Multimodal Stress Fusion (ml/stress_classifier.py)
+Fuses 9 visual behavioral metrics with 4 environmental sensor channels into a 13-feature representation vector:
+Input Feature Vector (13 Dimensions):
+ Code / configuration
+FEATURE_NAMES = [
+    "bottom_ratio",             # Fraction of time in bottom dwelling zone [0.0 - 1.0]
+    "longest_bottom",            # Longest continuous dwell at bottom (seconds) [0 - 180]
+    "bottom_entries_rate",       # Rate of transitions into bottom zone (entries/min)
+    "top_ratio",                # Fraction of time in top feeding zone [0.0 - 1.0]
+    "surface_visits_rate",       # Rate of visits to the surface (visits/min)
+    "time_between_top_visits",   # Mean interval between surface visits (seconds)
+    "freeze_ratio",              # Fraction of time immobile (displacement < 5px for >= 10s)
+    "immobility_events_rate",    # Number of freezing episodes per minute
+    "mean_speed",                # Mean swimming velocity (pixels/second)
+    "ph",                       # Water pH (nominal: 6.5 - 7.5)
+    "temperature",              # Water temperature in °C (nominal: 24.0 - 28.0)
+    "turbidity",                # Turbidity sensor reading (nominal clear: ~1800 ADC)
+    "ionconcentration",         # Electrical conductivity / Ion concentration (μS/cm)
+]
+Model Architecture:
+  Classifier: HistGradientBoostingClassifier trained on 35,000 multimodal samples.
+  0: Healthy (nominal swimming, balanced water parameters).
+  1: Mild Stress (sub-optimal movement or moderate water drift).
+ 
+=== PAGE 14 ===
+Smart Aquarium Monitoring System  Technical Reference
+14
+ 2: High Stress (prolonged freezing, severe bottom dwell, extreme temperature/pH).
+  Regressor: HistGradientBoostingRegressor predicting continuous stress $[0.0 - 1.0]$.
+  Rule-Based Fallback: If ML pickle artifacts are absent, domain heuristic equations calculate stress weights ($35\%$
+ bottom dwell, $25\%$ low surface activity, $40\%$ freezing + sensor penalties).
+Output Data Contract (data/latest_stress.json):
+ Code / configuration
+{
+  "mode": "ml",
+  "ml_model_used": true,
+  "tank_stress_score": 0.185,
+  "tank_stress_level": "Healthy",
+  "predicted_class": 0,
+  "class_probabilities": {
+    "healthy": 0.924,
+    "mild_stress": 0.065,
+    "high_stress": 0.011
+  },
+  "fused_primary_reason": "Normal Behavior",
+  "feature_contributions": {
+    "Normal Status": 100.0
+  }
+}
+---
+2. Water Quality Prediction (ml/water_quality_predictor.py)
+Predicts water quality and the probability of water deterioration from physical sensors:
+  Features: ["PH", "IONCONCENTRATION", "TEMP", "TURBIDITY"]
+  Models Supported:
+  Random Forest Regressor (rfr_model.pkl): Primary model (Accuracy: $98.78\%$, $R^2: 0.9965$).
+  Keras LSTM (lstm_model.keras): Sequence model.
+  Logistic Regression (lr_model.pkl): Linear baseline.
+ 
+Classification & Health Tiers:
+  $\text{Bad Probability} < 0.25 \implies \textbf{Good}$
+  $0.25 \le \text{Bad Probability} < 0.50 \implies \textbf{Fair}$
+  $0.50 \le \text{Bad Probability} < 0.75 \implies \textbf{Poor}$
+  $\ge 0.75 \implies \textbf{Critical}$
+ ---
+3. Explainable AI & Remediation (ml/shap_explainer.py)
+Computes SHAP (SHapley Additive exPlanations) values to explain which specific sensor parameter contributed most
+toward bad water quality, generating human-readable advice:
+ Code / configuration
+Sensor Readings ■■> TreeExplainer / Heuristic ■■> SHAP Feature Attribution ■■> Remediation Engine
+
+=== PAGE 15 ===
+Smart Aquarium Monitoring System  Technical Reference
+15
+Actionable Remediation Rules:
+ Primary Factor
+Sensor Trigger Condition
+Actionable Remediation Solution
+Turbidity
+Low ADC ($< 1400$), cloudy water
+Perform a 20%–40% water change, rinse mechanical filter
+sponge, reduce feeding for 24h.
+High pH
+$\text{pH} > 7.5$ (Alkaline)
+Perform 20% partial water change using soft/RO water, add
+Indian Almond leaves (Catappa) or natural driftwood.
+Low pH
+$\text{pH} < 6.5$ (Acidic)
+Perform partial water change, add crushed coral to filter
+chamber, check for rotting organic matter.
+High Temp
+$\text{Temp} > 28.0^\circ\text{C}$
+Increase surface aeration/bubbling (warm water holds less
+$O_2$), install cooling fan, reduce LED hours.
+Low Temp
+$\text{Temp} < 24.0^\circ\text{C}$
+Verify aquarium heater operation, ensure circulation around
+heater, warm gradually ($< 1^\circ\text{C}/\text{hr}$).
+High EC/Ion
+$\text{EC} > 500\,\mu\text{S}/\text{cm}$
+Top up evaporation with pure distilled/RO water, perform
+25% RO water change, pause fertilizer dosing.
+---
+4. NLP Symptom Processing & Disease Fusion
+NLP Symptom Parser (nlp/symptom_input.py)
+  Reads natural language text entered by users via the Android mobile app (e.g. "fish has white spots and cloudy tail").
+  Extracts domain clinical keywords and token patterns mapped directly to class_names.json.
+  Blends keyword rule matching ($40\%$) with ML classification ($60\%$).
+ 
+Disease Evidence Fusion (ml/disease_fusion.py)
+Combines Computer Vision snapshot evidence with NLP user symptoms:
+$$\text{Score}(\text{Disease}) = 0.50 \times \text{VisionConfidence} + 0.50 \times \text{NLPProbability}$$
+ Code / configuration
+{
+  "disease": "Parasitic diseases",
+  "disease_probability": 0.875,
+  "confidence": 0.875,
+  "reason": "Fused evidence for 'Parasitic diseases': Visual Model (Parasitic diseases 90%), NLP Symptoms (85%)",
+  "breakdown": {
+    "yolo_class": "Parasitic diseases",
+    "yolo_confidence": 0.90,
+    "symptom_confidence": 0.85
+  }
+}
+---
+5. Model Training Utilities
+  ml/train_stress_model.py: Trains HistGradientBoosting classifiers and regressors on 35,000 multi-modal
+ samples with sensor/behavioral correlations.
+ ml/train_water_quality_model.py: Trains Random Forest, Logistic Regression, and StandardScaler artifacts
+ on 30,000 calibrated water quality records.
+
+=== PAGE 16 ===
+Smart Aquarium Monitoring System  Technical Reference
+16
+CHAPTER 05
+05 — Automatic Feeder & MG90 Servo Controller
+Overview
+The automatic fish feeding subsystem controls an MG90 Micro Servo mounted on the aquarium food hopper, driven
+by hardware pulse-width modulation (PWM) on GPIO Pin 12 (BCM).
+Dispensing is triggered automatically at the end of Stage 3 (master.py::stage_hunger_and_feeding) based on
+the sustained 3-minute surface attendance of fish in the feeding zone.
+---
+1. Hardware Pinout & Wiring
+ MG90 Wire Color
+Signal / Function
+Raspberry Pi 4B Pin
+Brown / Black
+Ground ($0\text{V}$)
+GND (Pin 6 or 14)
+Red
+Power ($+5\text{V}$)
+5V Power (Pin 2 or 4)
+Orange / Yellow
+PWM Control Signal
+GPIO 12 / BCM 12 (Physical Pin 32)
+---
+2. Multi-Backend Hardware PWM Drivers (feeding/servo.py)
+To ensure robust operation across multiple Raspberry Pi OS versions (Debian 11 Bullseye, Debian 12 Bookworm,
+Debian 13 Trixie), the driver features an isolated multi-backend execution engine:
+ 1. Backend 1 — RPi.GPIO / rpi-lgpio: Standard direct hardware PWM timer driver.
+ 2. Backend 2 — gpiozero.AngularServo: Pulse-width controlled abstraction ($0.5\text{ms} - 2.5\text{ms}$ pulse
+ width).
+3. Backend 3 — lgpio: Direct GPIO character device access.
+ 4. Backend 4 — Mock Fallback: Emulated software logging for development environments without physical GPIO.
+ ---
+3. Surface Attendance & Rotation Mapping
+The feeder performs full rotational sweeps ($0^\circ \to 180^\circ$ Clockwise and $180^\circ \to 0^\circ$
+Counter-Clockwise) to dispense measured portions of pellet/flake food:
+ Code / configuration
+0° Baseline (Closed)  ■■>  180° CW Sweep (Open/Dispense)  ■■>  0° CCW Return (Reset)
+
+=== PAGE 17 ===
+Smart Aquarium Monitoring System  Technical Reference
+17
+Discrete Rotation Mapping:
+ Sustained Surface Activity
+Hunger Level
+Feeder Action
+Rounds
+Food Dispensed (@
+0.05g/turn)
+Normal / Transient (< 30%
+attendance or avg < 0.5)
+Normal
+Do not rotate
+0
+0.00 g
+Low Activity (~1 fish
+sustained in RHS feeding
+zone)
+Low
+Rotate once
+1
+0.05 g
+Moderate Activity (~2 fish
+sustained in RHS feeding
+zone)
+Moderate
+Rotate 2 times
+2
+0.10 g
+High Activity ($\ge 3$ fish
+sustained in RHS feeding
+zone)
+High
+Rotate 3 times
+3
+0.15 g
+---
+4. Portion Calculations & Safety Limits
+Portion Formula:
+$$\text{Food Dispensed (g)} = \text{Rounds} \times \text{portion\_grams\_per\_turn}$$
+Where portion_grams_per_turn = 0.05g (configurable in config.py and data/config.json).
+Safety Safeguards:
+ 1. Daily Feed Limit (max_daily_feedings = 10): Prevents overfeeding if sensors glitch.
+ 2. Daily Food Weight Limit (max_daily_food_grams = 5.0g): Caps total dispensed food per day.
+ 3. Midnight Counter Reset: Daily totals reset automatically at 00:00:00 local time.
+ 4. Post-Feed Cooldown Timer (post_feed_cooldown_minutes = 30):
+  After dispensing, the feeder enters a mandatory 30-minute cooldown.
+  During cooldown, Stage 3 bypasses top-camera feeding checks to allow fish to consume dispensed food.
+  The cooldown timestamp is stored atomically in data/latest_feed.json and survives system restarts or power
+ cycles.
+ Handles NTP clock drift / clock skew automatically.
+ ---
+5. Feeder Telemetry Schema (data/latest_feed.json)
+ Code / configuration
+{
+  "angle": 180,
+  "rounds": 2,
+  "dispensed": true,
+  "dispensed_amount": 0.10,
+  "portion_per_turn": 0.05,
+  "portion_unit": "g",
+  "daily_food_dispensed": 0.20,
+  "max_daily_food_grams": 5.0,
+  "hungry_count": 2,
+  "daily_count": 2,
+  "hardware_actuated": true,
+  "is_automatic": true,
+  "last_dispense_time": 1724300400.123,
+  "last_dispense_timestamp": "2026-08-22T09:40:00Z",
+  "cooldown_minutes": 30
+}
+
+=== PAGE 18 ===
+Smart Aquarium Monitoring System  Technical Reference
+18
+CHAPTER 06
+06 — Firebase Cloud Synchronization & Android
+App Bridge
+Overview
+The cloud synchronization subsystem connects the edge Raspberry Pi to Firebase Realtime Database (RTDB) using
+the official Firebase Admin Python SDK.
+It performs bidirectional communication:
+  Upstream: Uploads real-time state telemetry, sensor readings, behavioral metrics, disease diagnoses, and feeding
+ histories.
+ Downstream: Retrieves natural language symptom descriptions submitted by users from the companion Android
+ mobile app.
+---
+1. Firebase Initialization & Credentials (utils/firebase.py)
+The bridge checks for service account credentials in the following search order:
+ 1. serviceAccountKey.json (Project Root)
+ 2. firebase_credentials.json (Project Root)
+ 3. data/serviceAccountKey.json
+ 4. data/firebase_credentials.json
+ 
+Initialization Call:
+ Code / configuration
+import firebase_admin
+from firebase_admin import credentials
+cred = credentials.Certificate(str(FIREBASE_CREDENTIALS_PATH))
+firebase_admin.initialize_app(cred, {"databaseURL": FIREBASE_DATABASE_URL})
+If credentials are absent or the network is offline, all cloud calls fail gracefully without interrupting local edge monitoring
+or servo actuation.
+---
+2. Key Sanitization Bridge (firebase/client.py)
+Firebase Realtime Database prohibits keys containing characters: ., $, #, [, ], /, or empty strings.
+firebase/client.py implements a recursive deep sanitization function _sanitize_payload_keys() before
+uploading any dictionary:
+ Code / configuration
+def _sanitize_payload_keys(data: Any) -> Any:
+    if isinstance(data, dict):
+        sanitized = {}
+        for k, v in data.items():
+            clean_key = (
+                str(k)
+                .replace("/", "_")
+                .replace(".", "_")
+                .replace("$", "_")
+                .replace("#", "_")
+                .replace("[", "(")
+                .replace("]", ")")
+                .strip()
+            )
+
+=== PAGE 19 ===
+Smart Aquarium Monitoring System  Technical Reference
+19
+            if not clean_key:
+                clean_key = "unnamed_key"
+            sanitized[clean_key] = _sanitize_payload_keys(v)
+        return sanitized
+    ...
+---
+3. Realtime Database Schema & Node Structure
+Stage 5 of the master pipeline (master.py::stage_firebase_sync) populates the following RTDB hierarchy:
+ Code / configuration
+aqua-9e38e-default-rtdb/
+■■■ sensors/
+■   ■■■ latest/
+■       ■■■ temperature: 26.25
+■       ■■■ ph: 7.15
+■       ■■■ turbidity: 1810.0
+■       ■■■ ionconcentration: 345.0
+■
+■■■ behavior/
+■   ■■■ latest/
+■       ■■■ behavior/
+■       ■   ■■■ fish_count: 3
+■       ■   ■■■ bottom_ratio: 0.22
+■       ■   ■■■ surface_ratio: 0.18
+■       ■   ■■■ freeze_seconds: 0.0
+■       ■   ■■■ erratic_events: 2
+■       ■   ■■■ shoaling_score: 0.92
+■       ■■■ stress/
+■           ■■■ tank_stress_score: 0.185
+■           ■■■ tank_stress_level: "Healthy"
+■           ■■■ fused_primary_reason: "Normal Behavior"
+■
+■■■ water_quality/
+■   ■■■ latest/
+■       ■■■ water_quality/
+■       ■   ■■■ water_quality: "Good"
+■       ■   ■■■ water_quality_status: "GOOD WATER QUALITY"
+■       ■   ■■■ bad_probability: 0.024
+■       ■   ■■■ estimated_hours_until_water_change: 70.3
+■       ■■■ shap/
+■           ■■■ primary_factor: "TURBIDITY"
+■           ■■■ primary_contribution_percentage: 90.5
+■           ■■■ issue_detected: "Water is clear and pristine."
+■           ■■■ actionable_solution: "Maintain regular scheduled mechanical filter maintenance."
+■
+■■■ disease/
+■   ■■■ latest/
+■       ■■■ disease: "Healthy Fish"
+■       ■■■ disease_probability: 0.0
+■       ■■■ confidence: 1.0
+■       ■■■ reason: "No abnormal visual symptoms or reported text symptoms detected."
+■
+■■■ feeding/
+■   ■■■ latest/
+■   ■   ■■■ feed/
+■   ■   ■   ■■■ angle: 180
+■   ■   ■   ■■■ rounds: 2
+■   ■   ■   ■■■ dispensed: true
+■   ■   ■   ■■■ dispensed_amount: 0.10
+■   ■   ■   ■■■ portion_unit: "g"
+■   ■   ■   ■■■ cooldown_minutes: 30
+■   ■   ■■■ hunger/
+■   ■       ■■■ hungry_count: 2
+■   ■       ■■■ hunger_level: "Moderate"
+■   ■       ■■■ presence_ratio: 0.65
+■   ■■■ history/
+■       ■■■ -NyZ123abc456/ (Push event)
+■           ■■■ timestamp: "2026-08-22T09:40:00Z"
+■           ■■■ dispensed_amount: 0.10
+■           ■■■ portion_unit: "g"
+■           ■■■ rounds: 2
+■           ■■■ portion_per_turn: 0.05
+■           ■■■ hungry_count: 2
+■           ■■■ daily_food_dispensed: 0.20
+
+=== PAGE 20 ===
+Smart Aquarium Monitoring System  Technical Reference
+20
+■           ■■■ daily_count: 2
+■           ■■■ is_automatic: true
+■
+■■■ symptoms/
+    ■■■ user_input/
+        ■■■ "fish has white spots on tail and gills"
+---
+4. Fetching Mobile App Symptoms (firebase/fetch_user_symptoms.py)
+  Polling Paths: Checks symptoms/user_input, symptom_input, and user_symptoms.
+  Offline Persistence: Caches the latest symptom string to data/latest_symptom.json.
+  Downstream Consumer: Consumed in Stage 2 by nlp/symptom_input.py and ml/disease_fusion.py to
+ combine mobile user reports with real-time video snapshots.
